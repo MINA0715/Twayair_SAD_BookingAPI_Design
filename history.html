@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>History — T'wayair Booking API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4f1;--surface:#ffffff;--surface2:#f0ece8;--border:#ddd8d2;
+  --accent:#6b6158;--accent2:#8e7d70;--accent-lt:#a69488;
+  --text:#1a1614;--text-muted:#5a504a;--text-dim:#9e948e;
+  --green:#4a7c59;--orange:#b85c2a;--red:#b83232;--link:#5a4a3a;
+  --nav-w:260px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  /* XML syntax colors – dark panel on light bg */
+  --xml-bg:#141210;--xml-border:#3a322c;
+  --xt:#7ecfb3;   /* tag name */
+  --xb:#a69070;   /* bracket / slash */
+  --xa:#c0a880;   /* attr name = " */
+  --xv:#e8c88a;   /* attr value */
+  --xpi:#888;     /* processing instruction */
+  --xtext:#ede8e3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.7}
+nav{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;display:flex;flex-direction:column;overflow-y:auto;box-shadow:2px 0 8px rgba(107,97,88,.08)}
+.nav-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);background:var(--accent)}
+.nav-brand .logo{font-family:var(--mono);font-size:11px;color:#fff;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.nav-brand .ver{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);margin-top:3px}
+.nav-section{padding:8px 0}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:10px 16px 4px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 16px;color:var(--text-muted);text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(107,97,88,.07);font-weight:600}
+main{margin-left:var(--nav-w);flex:1;min-width:0}
+.topbar{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 32px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(107,97,88,.1)}
+.topbar-icon{font-size:18px}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.02em}
+.topbar-badge{margin-left:auto;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px}
+.content{padding:32px 40px;max-width:980px}
+h1{font-size:24px;font-weight:700;color:var(--text);margin:28px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+h1:first-child{margin-top:0}
+h2{font-size:17px;font-weight:700;color:var(--accent);margin:26px 0 10px;font-family:var(--mono);padding-left:10px;border-left:3px solid var(--accent)}
+h3{font-size:14px;font-weight:700;color:var(--green);margin:18px 0 8px;font-family:var(--mono)}
+h4{font-size:12px;font-weight:700;color:var(--orange);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+p{margin-bottom:10px;color:var(--text)}
+li{margin-left:20px;margin-bottom:4px;color:var(--text)}
+a{color:var(--link);text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:2px;transition:color .12s}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+strong{color:var(--text);font-weight:700}
+code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange);border:1px solid var(--border)}
+pre:not(.xml-pre){background:#1e1a17;border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;margin:12px 0}
+pre:not(.xml-pre) code{background:none;padding:0;font-size:12px;color:#d4ccc5;white-space:pre;border:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border:1px solid var(--accent2);text-align:left}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--text);vertical-align:top}
+tr:nth-child(even) td{background:rgba(107,97,88,.04)}
+tr:hover td{background:rgba(107,97,88,.08)}
+
+/* ── XML blocks ── */
+.xml-block{margin:12px 0;border:1px solid var(--xml-border);border-radius:7px;overflow:hidden;background:var(--xml-bg)}
+.xml-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--xml-border)}
+.xml-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent-lt);letter-spacing:.06em;text-transform:uppercase}
+.copy-btn{display:flex;align-items:center;gap:5px;background:rgba(107,97,88,.25);color:#c8b8a8;border:1px solid rgba(107,97,88,.4);border-radius:4px;padding:3px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:rgba(107,97,88,.5);color:#fff}
+.copy-btn.copied{background:rgba(74,124,89,.3);color:#7ecfb3;border-color:rgba(74,124,89,.5)}
+.xml-pre{margin:0;padding:16px;overflow-x:auto;background:transparent;border:none;border-radius:0}
+.xml-code{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#ede8e3;white-space:pre}
+.xml-code .xt{color:#60d9a8}
+.xml-code .xb{color:#d4a85a}
+.xml-code .xa{color:#d4b896}
+.xml-code .xv{color:#f5d97a}
+.xml-code .xpi{color:#a8a8a8}
+/* sample section wrapper */
+.sample-section{margin:16px 0}
+.sample-section-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding:6px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent)}
+
+.menu-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--accent);border:none;color:#fff;padding:7px 11px;border-radius:6px;cursor:pointer;font-size:16px}
+@media(max-width:768px){
+  .menu-toggle{display:block}
+  nav{transform:translateX(-100%);transition:transform .2s;z-index:50}
+  nav.open{transform:translateX(0)}
+  main{margin-left:0}
+  .content{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')">☰</button>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">T'wayair Booking API</div>
+    <div class="ver">Design Notes v4.0.6.8</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Documentation</div>
+    <a href="overview.html" class="nav-link" data-page="overview">🏠 Table of Contents</a><a href="history.html" class="nav-link" data-page="history">📋 History</a><a href="design-notes.html" class="nav-link" data-page="design-notes">📐 Design Notes</a><a href="shop-service.html" class="nav-link" data-page="shop-service">🛒 ShopService</a><a href="book-service.html" class="nav-link" data-page="book-service">📗 BookService</a><a href="postbook-service.html" class="nav-link" data-page="postbook-service">📮 PostBookService</a><a href="checkin-service.html" class="nav-link" data-page="checkin-service">✅ CheckinService</a><a href="complex-types.html" class="nav-link" data-page="complex-types">🔷 Complex Types</a><a href="simple-types.html" class="nav-link" data-page="simple-types">🔹 Simple Types</a><a href="appendix.html" class="nav-link" data-page="appendix">📎 Appendix</a>
+  </div>
+</nav>
+<main>
+  <div class="topbar">
+    <span class="topbar-icon">📋</span>
+    <span class="topbar-title">History</span>
+    <span class="topbar-badge">v4.0.6.8</span>
+  </div>
+  <div class="content">
+    
+<table>
+<tr><th>version</th><th>date</th><th>remark</th><th>Author</th></tr>
+<tr><td>3.0.1.0</td><td>2017-01-25</td><td>draft</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.1</td><td>2017-02-01</td><td>Update <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>RQmsg sample</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.2</td><td>2017-02-01</td><td>Add the basic communication sample (Classic ASP)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.3</td><td>2017-02-02</td><td>Change <a href="book-service.html#method-markseats"><a href="book-service.html#method-markseats">MarkSeat</a>s</a> URL</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.4</td><td>2017-02-03</td><td>Add Services in <a href="book-service.html">BookService</a>. (<a href="book-service.html#method-confirmcancelprice">ConfirmCancelPrice</a>, <a href="book-service.html#method-cancelbooking">CancelBooking</a>)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.5</td><td>2017-02-03</td><td>Add sample request/response in <a href="book-service.html#method-modifybooking">ModifyBooking</a> Service (payment sample)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.6</td><td>2017-02-09</td><td>Add Services in SaleService.  (<a href="shop-service.html#method-ancillaryavailability">AncillaryAvailabillity</a>, <a href="shop-service.html#method-mealavailability">MealAvailabillity</a>, <a href="shop-service.html#method-baggageavailability">BaggageAvailabillity</a>, <a href="shop-service.html#method-seatavailability">SeatAvailabillity</a>)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.7</td><td>2017-02-10</td><td>Add Services in <a href="book-service.html">BookService</a>.  (<a href="book-service.html#method-confirmschedulechange">ConfirmScheduleChange</a>)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.8</td><td>2017-02-10</td><td>Add sample request/response in <a href="book-service.html#method-modifybooking">ModifyBooking</a> Service (payment sample)  (CardAuthType = ECON)</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.9</td><td>2017-02-14</td><td>Add travelDocuments service details</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.10</td><td>2017-02-16</td><td>Add TokenID attribute on all RSmsg object</td><td>Sungmo kang</td></tr>
+<tr><td>3.0.1.11</td><td>2017-02-17</td></tr>
+<tr><td>3.0.1.12</td><td>2017-02-21</td><td>Modify description for SurName in PnrContact</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.13</td><td>2017-02-22</td><td>Add <a href="book-service.html#method-changecontactpoint">ChangeContactPoint</a> Modify <a href="book-service.html#method-confirmprice">ConfirmPrice</a>RS sample xml</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.14</td><td>2017-02-27</td><td>Add <a href="postbook-service.html#method-dailysalesreportsummary">DailySalesReportSummary</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.15</td><td>2017-02-28</td><td>Add <a href="postbook-service.html#method-dailyrevenuereportsummary">DailyRevenueReportSummary</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.15</td><td>2017-03-10</td><td>Add <a href="postbook-service.html#method-boardingpassinfo">BoardingPassInfo</a> Modify <a href="book-service.html#method-modifybooking">ModifyBooking</a>RQ/RS sample xml</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.16</td></tr>
+<tr><td>3.0.1.17</td><td>2017-03-23</td><td>Add new field(FlightSegmentGroupID) in FlightSegmentDetail. Add new field(<a href="complex-types.html#fare">Fare</a>ComponentId) in <a href="complex-types.html#faredetailsforguesttype_rs">FareDetailsForGuestType</a>. Add <a href="book-service.html#method-createbooking">CreateBooking</a> sample for paxSubType.</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.18</td><td>2017-04-03</td><td>Correct typos.</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.19</td><td>2017-05-11</td><td>Add <a href="shop-service.html#method-freebaggageallowance">FreeBaggageAllowance</a> in <a href="shop-service.html">ShopService</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.20</td><td>2017-05-15</td><td>Add <a href="shop-service.html#method-retrievessim">RetrieveSsim</a> in <a href="shop-service.html">ShopService</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.21</td><td>2017-06-02</td><td>Add new PaxSubType/GuestType (RB)</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.1.22</td><td>2017-07-13</td><td>Add new Field(Cvc) in <a href="complex-types.html#econauthinfo">ECONAuthInfo</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.0</td><td>2017-07-14</td><td>Add new fields and enumulation on iflyRes 4.4 version. <a href="complex-types.html#childssrstype">ChildSsrsType</a>, CommentCodeType, <a href="complex-types.html#customfieldlisttype">CustomFieldListType</a>, <a href="complex-types.html#customfieldtype">CustomFieldType</a>, <a href="simple-types.html#customnamefieldtype">CustomNameFieldType</a>, <a href="complex-types.html#guestpaymentinfotype">GuestPaymentInfoType</a>, GuestType, <a href="complex-types.html#ssrinformationtype">SSRInformationType</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.1</td><td>2017-10-24</td><td>Modify attribute for PointOfPurchase in <a href="shop-service.html#method-retrieveroute">RetrieveRoute</a>RQ</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.2</td><td>2017-11-10</td><td>Add Optional field in <a href="shop-service.html#method-airavailability">AirAvailability</a>RQ.</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.4</td><td>2018-04-26</td><td>Add new object(<a href="complex-types.html#offlineauthinfo">OfflineAuthInfo</a>) in <a href="book-service.html#method-modifybooking">ModifyBooking</a>RQ</td><td>Sungmo Kang</td></tr>
+<tr><td>3.0.2.5</td><td>2018-06-19</td><td>Add <a href="book-service.html#method-senditinerary">SendItinerary</a> service</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.6</td><td>2018-07-05</td><td>Update PaxSubType descriptions</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.7</td><td>2018-08-08</td><td>Update <a href="shop-service.html#method-airavailability">AirAvailability</a> service details</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.8</td><td>2018-08-31</td><td>Add <a href="shop-service.html#method-seatavailability">SeatAvailability</a> descriptions</td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.9</td><td>2019-06-03</td><td>Add values for <a href="simple-types.html#contactdetails_type">ContactDetails_Type</a></td><td>Eunji Choi</td></tr>
+<tr><td>3.0.2.10</td><td>2019-06-18</td><td>Add <a href="shop-service.html#method-fareruledescriptionbyroute"><a href="shop-service.html#method-fareruledescription"><a href="complex-types.html#fare">Fare</a>RuleDescription</a>ByRoute</a> Update FBA Information in <a href="shop-service.html#method-airavailability">AirAvailability</a>RS (Add FreeBaggageAllowncePiece and FreeBaggageAllownceWeight in PricingComponentInfo)</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.1.1</td><td>2019-07-02</td><td>Add SsrInfo In <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>RQ Add AddSeatAvailStatusInfo, AddMealAvailStatusInfo, AddBaggageAvailStatusInfo, AddBundleAvailStatusInfo in <a href="shop-service.html#method-ancillaryavailability">AncillaryAvailability</a>RS Add BundleSSRCode in <a href="shop-service.html#method-seatavailability">SeatAvailability</a>RQ Add IsIncludedInBundle in SeatAvailabilityRS Arrange SeatAvailabilityRS &gt; SeatDetails Add BundleSSRCode in <a href="shop-service.html#method-mealavailability">MealAvailability</a>RQ Add IsIncludedInBundle in MealAvailabilityRS</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.2</td><td>2019-07-03</td><td>Add FreeAllowanceBaggagePiece, AddSize, TotalSize in <a href="shop-service.html#method-baggageavailability">BaggageAvailability</a>RS</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.3</td><td>2019-07-11</td><td>Add <a href="shop-service.html#method-bundleavailability">BundleAvailability</a></td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.4</td><td>2019-07-26</td><td>Add SSRInfo(BUNDLE) in <a href="book-service.html#method-createbooking">CreateBooking</a>RQ</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.5</td><td>2019-07-30</td><td>Add IsTicketed in <a href="book-service.html#method-confirmprice">ConfirmPrice</a>RQ Add RQ/RS Sample about Ancillary Service(BUNDLE, SEAT, MEAL, BAGGAGE)</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.6</td><td>2019-08-05</td><td>Add IsTicketed in <a href="book-service.html#method-modifybooking">ModifyBooking</a>RQ Add RQ/RS Sample about Ancillary Service(BUNDLE, SEAT, MEAL, BAGGAGE)</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.7</td><td>2019-08-06</td><td>Add <a href="book-service.html#method-changeguestcontactpoint">ChangeGuestContactPoint</a></td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.8</td><td>2019-08-08</td><td>Update <a href="book-service.html#method-retrievebooking">RetrieveBooking</a> (Retrieve GDS PNR) Add new field(SegmentGroupId) in <a href="book-service.html#method-confirmcancelprice">ConfirmCancelPrice</a>RQ / <a href="book-service.html#method-cancelbooking">CancelBooking</a>RQ Add <a href="book-service.html#method-confirmcancelinfant">Confirm<a href="book-service.html#method-cancelinfant">CancelInfant</a></a> / CancelInfant</td><td>Yongtaek Kwon</td></tr>
+<tr><td>3.0.3.9</td><td>2019-08-13</td><td>Add <a href="book-service.html#method-releaseancillary">ReleaseAncillary</a></td><td>Yongtaek Kwon</td></tr>
+<tr><td>3.0.3.10</td><td>2019-08-27</td><td>Add RQ/RS Samples</td><td>Jihoon Kim</td></tr>
+<tr><td>3.0.3.11</td><td>2019-08-28</td><td>Update the field(<a href="complex-types.html#itinerarychangetype">ItineraryChangeType</a>) In <a href="book-service.html#method-confirmprice">ConfirmPrice</a>RQ / <a href="book-service.html#method-modifybooking">ModifyBooking</a> RQ Add and remove the fields in <a href="complex-types.html#segmentchangetype">SegmentChangeType</a> Add RQ/RS Samples</td><td>Yongtaek Kwon</td></tr>
+<tr><td>4.0.1.1</td><td>2019-08-30</td><td>Update API Service Exposed, Process Flow</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.2</td><td>2019-09-16</td><td>Add new disabilities code</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.3</td><td>2019-10-07</td><td>Update flow chart</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.4</td><td>2019-10-10</td><td>Correct descirptions Description</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.5</td><td>2019-10-14</td><td>Add BookAvailLimitDate in <a href="shop-service.html#method-retrieveroute">RetrieveRoute</a>RSmsg</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.6</td><td>2019-10-22</td><td>Modify fields name in <a href="shop-service.html#method-bundleavailability">BundleAvailability</a>RQ</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.7</td><td>2019-11-05</td><td>Add SaleDate in <a href="shop-service.html#method-fareruledescriptionbyroute"><a href="shop-service.html#method-fareruledescription"><a href="complex-types.html#fare">Fare</a>RuleDescription</a>ByRoute</a>RQ &gt; FareRuleSearches</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.8</td><td>2019-11-07</td><td>Add <a href="complex-types.html#econauthinfo">ECONAuthInfo</a> description</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.9</td><td>2019-11-11</td><td>Add LanguageCode in <a href="shop-service.html#method-fareruledescriptionbyroute"><a href="shop-service.html#method-fareruledescription"><a href="complex-types.html#fare">Fare</a>RuleDescription</a>ByRoute</a>RQ</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.10</td><td>2019-11-25</td><td>Correct descriptions</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.11</td><td>2019-12-18</td><td>Change <a href="complex-types.html#fare">Fare</a>Type in <a href="shop-service.html#method-fareruledescriptionbyroute"><a href="shop-service.html#method-fareruledescription">FareRuleDescription</a>ByRoute</a>RQ &gt; <a href="complex-types.html#farerulesearchtype">FareRuleSearchType</a> to optional</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.12</td><td>2020-01-10</td><td>Change service endpoint for staging.</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.13</td><td>2020-01-21</td><td>Add <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>ForAncSale</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.14</td><td>2020-01-28</td><td>Add Nationality in GuestReuqestDetailsType Add ActionType for TravelDocumentDetailsType</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.15</td><td>2020-02-05</td><td>Add AGCC FOP</td><td>Jihoon Kim</td></tr>
+<tr><td>4.0.1.16</td><td>2020-02-19</td><td>Delete <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>ForAncSale</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.17</td><td>2020-03-06</td><td>Add <a href="postbook-service.html#method-dailysalesreportrealtime">DailySalesReportRealTime</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.18</td><td>2020-03-20</td><td>Update <a href="book-service.html#method-modifybooking">ModifyBooking</a> sample requset</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.19</td><td>2020-03-31</td><td>Add ssrExplain filed to <a href="shop-service.html#method-mealavailability">MealAvailability</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.20</td><td>2020-04-03</td><td>Update descriptions</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.21</td><td>2020-04-27</td><td>Add SsrCaution field to <a href="shop-service.html#method-mealavailability">MealAvailability</a>RS</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.22</td><td>2020-05-12</td><td>Add Legend, MealType fields to <a href="shop-service.html#method-mealavailability">MealAvailability</a>RS</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.23</td><td>2020-06-04</td><td>Add new domestic passenger discount type</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.24</td><td>2020-06-11</td><td>Correct descirptions</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.25</td><td>2020-07-15</td><td>Modify <a href="book-service.html#method-enhancedairavailability">Enhanced<a href="shop-service.html#method-airavailability">AirAvailability</a></a></td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.26</td><td>2020-09-03</td><td>Add Description for <a href="shop-service.html#method-fareruledescriptionbyroute"><a href="shop-service.html#method-fareruledescription"><a href="complex-types.html#fare">Fare</a>RuleDescription</a>ByRoute</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.27</td><td>2020-11-10</td><td>Add KP(Kakaopay) FOP</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.28</td><td>2020-11-23</td><td>Modify <a href="postbook-service.html#method-dailysalesreportrealtime">DailySalesReportRealTime</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.29</td><td>2021-01-04</td><td>Add a method that can be queried with SEG - <a href="shop-service.html#method-ancillaryavailability">AncillaryAvailability</a>, <a href="shop-service.html#method-baggageavailability">BaggageAvailability</a>, <a href="shop-service.html#method-bundleavailability">BundleAvailability</a>, <a href="shop-service.html#method-mealavailability">MealAvailability</a>, <a href="shop-service.html#method-seatavailability">SeatAvailability</a> Change time limit to 30 minutes</td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.30</td><td>2021-01-28</td><td>Add SeatAssignSSRCode to <a href="shop-service.html#method-bundleavailability">BundleAvailability</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.31</td><td>2021-02-16</td><td>Add NP(Naverpay) FOP</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.32</td><td>2021-03-05</td><td>Add New fields in <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>RS</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.33</td><td>2021-03-11</td><td>Modify <a href="complex-types.html#bundleservice">BundleService</a> and <a href="complex-types.html#bundlechild">BundleChild</a> class</td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.34</td><td>2021-04-08</td><td>Add SP(Smilepay) FOP</td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.35</td><td>2021-05-18</td><td>Add Cabin Class field to ComplexType(<a href="complex-types.html#flightsegmentdetailstype_rs">FlightSegmentDetailsType</a>, <a href="complex-types.html#flightsegmentinfotype">Flight<a href="complex-types.html#segmentinfotype"><a href="complex-types.html#segmentinfo">SegmentInfo</a>Type</a></a>)</td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.36</td><td>2021-06-04</td><td>Add new PaxSubType(DG)</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.37</td><td>2021-06-16</td><td>Add CheckinAvailability</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.1.38</td><td>2021-07-19</td><td>Add global card payment to <a href="book-service.html#method-modifybooking">ModifyBooking</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.39</td><td>2021-10-21</td><td>Update <a href="complex-types.html#residencetype">ResidenceType</a> description</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.1.40</td><td>2021-11-15</td><td>Add <a href="checkin-service.html">CheckInService</a> diagram</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.41</td><td>2021-11-16</td><td>Add Business Cabin Class and Biz <a href="complex-types.html#fare">Fare</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.42</td><td>2021-11-17</td><td>Update CheckinAvailability</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.1.43</td><td>2021-12-15</td><td>Add <a href="checkin-service.html#method-searchguest">SearchGuest</a> Add New fields(SMTCode) in <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>RS</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.1.44</td><td>2021-12-17</td><td>Add NPAG, SPAG FOP NPAG : Naverpay + Agency Credit SPAG : Smilepay + Agency Credit</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.1.45</td><td>2021-12-17</td><td>Add <a href="checkin-service.html#method-checkinguest">CheckinGuest</a> and <a href="checkin-service.html#method-uncheckinguest">UnCheckinGuest</a></td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.1.46</td><td>2021-12-23</td><td>Add <a href="checkin-service.html#method-checkinseatavailability">Checkin<a href="shop-service.html#method-seatavailability">SeatAvailability</a></a> Add CabinClass field to ComplexType(<a href="complex-types.html#flightsegmentdetailscheckin">FlightSegmentDetailsForCheckin</a>) Update description for <a href="complex-types.html#seatmapinformation">SeatMapInformation</a></td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.1.47</td><td>2021-12-23</td><td>Add new fields (RevenueDocNumber, RevenueDocType) to <a href="complex-types.html#feeinformationtype"><a href="complex-types.html#feeinformation">FeeInformation</a>Type</a></td><td>Eunji Choi</td></tr>
+<tr><td>4.0.2.1</td><td>2021-12-24</td><td>Add IsCheckinPossible, CheckinStartMinute, CheckinEndMinute field to ComplexType(<a href="complex-types.html#routeinfotype">RouteInfoType</a>)</td><td>JangSeon Lee</td></tr>
+<tr><td>4.0.2.2</td><td>2021-12-27</td><td>Correct the mismatched details</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.2.3</td><td>2021-12-29</td><td>Update <a href="shop-service.html#method-retrieveroute">RetrieveRoute</a> sample response</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.2.4</td><td>2022-01-04</td><td>Add New fields(Origin/Destination) to <a href="shop-service.html#method-retrieveroute">RetrieveRoute</a>RQ Add New fields(<a href="simple-types.html#boardingpasstype">BoardingPassType</a>) to <a href="complex-types.html#guestdetailsforcheckin">GuestDetailsForCheckin</a> Change location for <a href="checkin-service.html#method-searchguest">SearchGuest</a>RS &gt; GuestDetailsForCheckin Update GuestDetailsForCheckin description</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.2.5</td><td>2022-02-16</td><td>Add New CardType(AMEX) to <a href="complex-types.html#econauthinfo">ECONAuthInfo</a>Type</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.2.6</td><td>2022-04-07</td><td>Update <a href="shop-service.html#method-seatavailability">SeatAvailability</a>, <a href="checkin-service.html#method-checkinseatavailability">CheckinSeatAvailability</a>, <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a> description.</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.2.7</td><td>2022-04-08</td><td>Add the function to add emergency contacts through <a href="book-service.html#method-createbooking">CreateBooking</a> and <a href="book-service.html#method-changeguestcontactpoint">ChangeGuestContactPoint</a> API</td><td>Jaegeun Ha</td></tr>
+<tr><td>4.0.2.9</td><td>2022-09-08</td><td>Modify <a href="book-service.html#method-changeguestcontactpoint">ChangeGuestContactPoint</a> service</td><td>Eunji Choi</td></tr>
+<tr><td>4.0.3.0</td><td>2022-10-06</td><td>Update <a href="complex-types.html#econauthinfo">ECONAuthInfo</a>.SessionId in <a href="book-service.html#method-modifybooking">ModifyBooking</a>RQ (Strikethrough - Deleted fields)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.3.1</td><td>2022-11-10</td><td>Add New fields(PackageId) to <a href="complex-types.html#kakaopayinfo">KakaopayInfo</a></td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.3.2</td><td>2022-11-17</td><td>Add <a href="complex-types.html#paxbaggageallowancetype"><a href="complex-types.html#paxbaggageallowancetype">PaxBaggageAllow</a>anc</a>e field to <a href="book-service.html#method-createbooking">CreateBooking</a>RS, <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>RS, <a href="book-service.html#method-confirmprice">ConfirmPrice</a>RS, MidifyBookingRS</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.3.3</td><td>2022-11-22</td><td>Add KPAG FOP KPAG : Kakaopay + Agency Credit</td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.3.4</td><td>2023-03-27</td><td>Add Booking Process(Reaccm) Add <a href="book-service.html#method-confirmschedulechange">ConfirmScheduleChange</a> sample (<a href="book-service.html#method-retrievebooking">RetrieveBooking</a>RS.Itinerary – Schedule Change/Cancel)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.3.5</td><td>2023-04-14</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.3.6</td><td>2023-06-30</td><td>Add <a href="shop-service.html#method-retrievepaxtypediscount">RetrievePaxTypeDiscount</a> Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.3.7</td><td>2023-09-15</td><td>Add TPS infomation. ErrorCode list up.</td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.3.8</td><td>2023-11-13</td><td>Modify fields name in <a href="book-service.html#method-traveldocuments">TravelDocuments</a>RQ (TravelDocuments to TravelDocumentDetails) Modify fields type in TravelDocumentsRS, <a href="book-service.html#method-confirmprice">ConfirmPrice</a>RS, <a href="book-service.html#method-modifybooking">ModifyBooking</a>RS(Itinerary)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.3.9</td><td>2023-11-22</td><td>Update Sample in <a href="book-service.html#method-enhancedairavailability">Enhanced<a href="shop-service.html#method-airavailability">AirAvailability</a></a> (Request/Response (Multi leg flight))</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.4.0</td><td>2023-11-28</td><td>Modify fields name in <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>RQ Modify fields information in <a href="shop-service.html#method-throughflightinfo">ThroughFlightInfo</a>RQ</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.4.1</td><td>2023-12-01</td><td>Modify fields name in <a href="book-service.html#method-modifybooking">ModifyBooking</a> GuestPaymentInfo Modify Type in <a href="complex-types.html#flightsegmentdetailstype_rs">FlightSegmentDetailsType</a> flightDate Add Sample to <a href="book-service.html#method-markseats"><a href="book-service.html#method-markseats">MarkSeat</a>s</a>(<a href="appendix.html#appendix-5-connection-flight">Connection Flight</a>) Add Sample to <a href="book-service.html#method-createbooking">CreateBooking</a>(Connection Flight)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.4.2</td><td>2023-12-20</td><td>Modify <a href="book-service.html#method-markseats"><a href="book-service.html#method-markseats">MarkSeat</a>s</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.4.3</td><td>2024-01-03</td><td>Add Process flow(Check-in, Uncheck-in)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.4.4</td><td>2024-02-28</td><td><a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a> delete output value (PnrNumber)</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.4.5</td><td>2024-03-07</td><td><a href="shop-service.html#method-seatavailability">SeatAvailability</a> Description, <a href="complex-types.html#attatchedssrtype">AttatchedSsrType</a> add(ZRST)</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.4.6</td><td>2024-03-12</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.4.7</td><td>2024-05-09</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.4.8</td><td>2024-05-29</td><td>LocationAttribute ‘G’ changed. (<a href="shop-service.html#method-seatavailability">SeatAvailability</a>, <a href="checkin-service.html#method-checkinseatavailability">CheckinSeatAvailability</a>) RESTRICTED -&gt; LIMITED OXYGEN MASK</td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.4.9</td><td>2024-06-24</td><td>Add New fields(IsFreeMealOffer, FreeMealCount) in <a href="shop-service.html#method-airavailability">AirAvailability</a>RS</td><td>Mina Jo</td></tr>
+<tr><td>4.0.5.0</td><td>2024-07-24</td><td>Modify process flow</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.5.1</td><td>2024-09-24</td><td><a href="postbook-service.html#method-calendarfare-deprecated">Calendar<a href="complex-types.html#fare">Fare</a></a> is Deprecated. Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a>.</td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.5.2</td><td>2024-09-25</td><td>Update <a href="complex-types.html#paymentsummarytype">PaymentSummaryType</a>(AccountName, AccountContact ) descriptions</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.5.3</td><td>2024-11-14</td><td>Update <a href="appendix.html#appendix-1-error-codes">Appendix 1 – <a href="appendix.html#appendix-1-error-codes">Error Codes</a></a></td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.5.4</td><td>2024-11-19</td><td>Modify Service Endpoint(Development Server)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.5.5</td><td>2024-11-20</td><td>In the case of two <a href="complex-types.html#segmentinfo">SegmentInfo</a> with different <a href="complex-types.html#fare">Fare</a>Classes. <a href="shop-service.html#method-farequote">FareQuote</a>, <a href="book-service.html#method-createbooking">CreateBooking</a></td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.5.6</td><td>2024-11-25</td><td>Change in Online Check-in Procedure Addition of Security Question and Consent Stage Required Update of Seat Attribute Code Description Change Code B from BLOCK to HANDICAPPED</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.5.7</td><td>2024-12-30</td><td>PnrNumber is a required value in <a href="book-service.html#method-retrievebooking">RetrieveBooking</a> API.</td><td>DaeHyun Kim</td></tr>
+<tr><td>4.0.5.8</td><td>2025-01-07</td><td>Modify <a href="appendix.html#appendix-1-error-codes">Error Codes</a> Description. Modify PnrNumber Description.</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.5.9</td><td>2025-04-21</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Mina Jo</td></tr>
+<tr><td>4.0.6.0</td><td>2025-04-24</td><td>Add About the Role Add Purchase Ancillary Services for <a href="design-notes.html#about-the-role">AncillarySaleDelegate Agency</a> Add New APIs for AncillarySaleDelegate Agency <a href="book-service.html#method-generateancillaryauthtoken">GenerateAncillaryAuthToken</a> <a href="book-service.html#method-retrieveancillaryauthtokenstatus">RetrieveAncillaryAuthTokenStatus</a> Update Contents and Add Cases for AncillarySaleDelegate Agency <a href="shop-service.html#method-ancillaryavailability">AncillaryAvailability</a> <a href="shop-service.html#method-mealavailability">MealAvailability</a> <a href="shop-service.html#method-baggageavailability">BaggageAvailability</a> <a href="shop-service.html#method-seatavailability">SeatAvailability</a> <a href="book-service.html#method-retrievebooking">RetrieveBooking</a> <a href="book-service.html#method-confirmprice">ConfirmPrice</a> <a href="book-service.html#method-modifybooking">ModifyBooking</a> Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a> Add <a href="design-notes.html#booking-management-process-for-group-pnr-retrieval-agency">Group PNR Retrieval Agency</a> Update Contents and Add Cases for Group PNR Retrieval Agency AncillaryAvailability MealAvailability BaggageAvailability SeatAvailability RetrieveBooking ConfirmPrice ModifyBooking <a href="book-service.html#method-traveldocuments">TravelDocuments</a> <a href="book-service.html#method-changeguestcontactpoint">ChangeGuestContactPoint</a> <a href="book-service.html#method-splitbooking">SplitBooking</a></td><td>Mina Jo</td></tr>
+<tr><td>4.0.6.1</td><td>2025-07-01</td><td>Change Payment TL (30minutes-&gt;20minutes)</td><td>Daehyun Kim</td></tr>
+<tr><td>4.0.6.2</td><td>2025-07-23</td><td>Update of <a href="shop-service.html#method-baggageavailability">BaggageAvailability</a> sample(ICN-GUM)</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.6.3</td><td>2025-09-12</td><td>Update of connection flight sample <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>, <a href="book-service.html#method-createbooking">CreateBooking</a>, Appendix 5 Update of <a href="shop-service.html#method-seatavailability">SeatAvailability</a> description</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.6.4</td><td>2025-10-21</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Mina Jo</td></tr>
+<tr><td>4.0.6.5</td><td>2025-11-04</td><td>Update Cabin Class description <strong>Note :</strong> The default value is ECONOMY. If this field is left blank, ECONOMY will be automatically set. Therefore, if the cabin class is not ECONOMY, this field must be explicitly provided.</td><td>Nahyun Lee</td></tr>
+<tr><td>4.0.6.7</td><td>2026-02-02</td><td>Update of <a href="shop-service.html#method-seatavailability">SeatAvailability</a> description Emergency exit seats, Seats with limited oxygen masks</td><td>Jangseon Lee</td></tr>
+<tr><td>4.0.6.8</td><td>2026-03-30</td><td>Add <a href="appendix.html#appendix-1-error-codes">Error Codes</a></td><td>Mina Jo</td></tr>
+</table>
+
+
+<h1 id="design-notes">Design Notes</h1>
+  </div>
+</main>
+<script>
+function copyXml(blockId) {
+  const block = document.getElementById(blockId);
+  const code = block.querySelector('.xml-code');
+  const raw = code.dataset.raw || code.textContent;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = block.querySelector('.copy-btn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 18 4 13"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = raw; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn = block.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2v1"/></svg> Copy'; }, 2000);
+  });
+}
+</script>
+<script>
+const page=location.pathname.split('/').pop().replace('.html','')||'overview';
+document.querySelectorAll('.nav-link').forEach(a=>{if(a.dataset.page===page)a.classList.add('active');});
+</script>
+</body>
+</html>

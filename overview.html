@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Table of Contents — T'wayair Booking API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4f1;--surface:#ffffff;--surface2:#f0ece8;--border:#ddd8d2;
+  --accent:#6b6158;--accent2:#8e7d70;--accent-lt:#a69488;
+  --text:#1a1614;--text-muted:#5a504a;--text-dim:#9e948e;
+  --green:#4a7c59;--orange:#b85c2a;--red:#b83232;--link:#5a4a3a;
+  --nav-w:260px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  /* XML syntax colors – dark panel on light bg */
+  --xml-bg:#141210;--xml-border:#3a322c;
+  --xt:#7ecfb3;   /* tag name */
+  --xb:#a69070;   /* bracket / slash */
+  --xa:#c0a880;   /* attr name = " */
+  --xv:#e8c88a;   /* attr value */
+  --xpi:#888;     /* processing instruction */
+  --xtext:#ede8e3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.7}
+nav{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;display:flex;flex-direction:column;overflow-y:auto;box-shadow:2px 0 8px rgba(107,97,88,.08)}
+.nav-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);background:var(--accent)}
+.nav-brand .logo{font-family:var(--mono);font-size:11px;color:#fff;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.nav-brand .ver{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);margin-top:3px}
+.nav-section{padding:8px 0}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:10px 16px 4px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 16px;color:var(--text-muted);text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(107,97,88,.07);font-weight:600}
+main{margin-left:var(--nav-w);flex:1;min-width:0}
+.topbar{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 32px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(107,97,88,.1)}
+.topbar-icon{font-size:18px}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.02em}
+.topbar-badge{margin-left:auto;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px}
+.content{padding:32px 40px;max-width:980px}
+h1{font-size:24px;font-weight:700;color:var(--text);margin:28px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+h1:first-child{margin-top:0}
+h2{font-size:17px;font-weight:700;color:var(--accent);margin:26px 0 10px;font-family:var(--mono);padding-left:10px;border-left:3px solid var(--accent)}
+h3{font-size:14px;font-weight:700;color:var(--green);margin:18px 0 8px;font-family:var(--mono)}
+h4{font-size:12px;font-weight:700;color:var(--orange);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+p{margin-bottom:10px;color:var(--text)}
+li{margin-left:20px;margin-bottom:4px;color:var(--text)}
+a{color:var(--link);text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:2px;transition:color .12s}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+strong{color:var(--text);font-weight:700}
+code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange);border:1px solid var(--border)}
+pre:not(.xml-pre){background:#1e1a17;border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;margin:12px 0}
+pre:not(.xml-pre) code{background:none;padding:0;font-size:12px;color:#d4ccc5;white-space:pre;border:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border:1px solid var(--accent2);text-align:left}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--text);vertical-align:top}
+tr:nth-child(even) td{background:rgba(107,97,88,.04)}
+tr:hover td{background:rgba(107,97,88,.08)}
+
+/* ── XML blocks ── */
+.xml-block{margin:12px 0;border:1px solid var(--xml-border);border-radius:7px;overflow:hidden;background:var(--xml-bg)}
+.xml-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--xml-border)}
+.xml-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent-lt);letter-spacing:.06em;text-transform:uppercase}
+.copy-btn{display:flex;align-items:center;gap:5px;background:rgba(107,97,88,.25);color:#c8b8a8;border:1px solid rgba(107,97,88,.4);border-radius:4px;padding:3px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:rgba(107,97,88,.5);color:#fff}
+.copy-btn.copied{background:rgba(74,124,89,.3);color:#7ecfb3;border-color:rgba(74,124,89,.5)}
+.xml-pre{margin:0;padding:16px;overflow-x:auto;background:transparent;border:none;border-radius:0}
+.xml-code{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#ede8e3;white-space:pre}
+.xml-code .xt{color:#60d9a8}
+.xml-code .xb{color:#d4a85a}
+.xml-code .xa{color:#d4b896}
+.xml-code .xv{color:#f5d97a}
+.xml-code .xpi{color:#a8a8a8}
+/* sample section wrapper */
+.sample-section{margin:16px 0}
+.sample-section-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding:6px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent)}
+
+.menu-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--accent);border:none;color:#fff;padding:7px 11px;border-radius:6px;cursor:pointer;font-size:16px}
+@media(max-width:768px){
+  .menu-toggle{display:block}
+  nav{transform:translateX(-100%);transition:transform .2s;z-index:50}
+  nav.open{transform:translateX(0)}
+  main{margin-left:0}
+  .content{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')">☰</button>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">T'wayair Booking API</div>
+    <div class="ver">Design Notes v4.0.6.8</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Documentation</div>
+    <a href="overview.html" class="nav-link" data-page="overview">🏠 Table of Contents</a><a href="history.html" class="nav-link" data-page="history">📋 History</a><a href="design-notes.html" class="nav-link" data-page="design-notes">📐 Design Notes</a><a href="shop-service.html" class="nav-link" data-page="shop-service">🛒 ShopService</a><a href="book-service.html" class="nav-link" data-page="book-service">📗 BookService</a><a href="postbook-service.html" class="nav-link" data-page="postbook-service">📮 PostBookService</a><a href="checkin-service.html" class="nav-link" data-page="checkin-service">✅ CheckinService</a><a href="complex-types.html" class="nav-link" data-page="complex-types">🔷 Complex Types</a><a href="simple-types.html" class="nav-link" data-page="simple-types">🔹 Simple Types</a><a href="appendix.html" class="nav-link" data-page="appendix">📎 Appendix</a>
+  </div>
+</nav>
+<main>
+  <div class="topbar">
+    <span class="topbar-icon">🏠</span>
+    <span class="topbar-title">Table of Contents</span>
+    <span class="topbar-badge">v4.0.6.8</span>
+  </div>
+  <div class="content">
+    <style>
+.subtitle{color:var(--text-muted);font-size:13px;margin-bottom:28px}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.toc-group{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(107,97,88,.06)}
+.toc-group-label{font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#fff;background:var(--accent);padding:8px 14px}
+.toc-link{display:block;padding:6px 14px;color:var(--text-muted);text-decoration:none;font-size:13px;border-bottom:1px solid rgba(107,97,88,.1);transition:all .12s}
+.toc-link:last-child{border-bottom:none}
+.toc-link:hover{color:var(--accent);background:var(--surface2);padding-left:18px;text-decoration:none}
+.toc-link.toc-method{padding-left:28px;font-family:var(--mono);font-size:12px;color:var(--text-dim)}
+.toc-link.toc-method:hover{color:var(--green)}
+.toc-link.toc-service{font-weight:600;color:var(--text)}
+</style><h1 style="border:none;padding:0;margin-bottom:6px">T'wayair Booking API</h1><p class="subtitle">Design Notes v4.0.6.8 &nbsp;·&nbsp; © 2017 t'way air all rights reserved</p><div class="toc-grid"><div class="toc-group"><div class="toc-group-label">History</div><a href="history.html" class="toc-link toc-service">History</a><a href="design-notes.html" class="toc-link toc-item">Design Notes</a><a href="design-notes.html#component-diagram" class="toc-link toc-item">Component Diagram</a><a href="design-notes.html#interface-diagram" class="toc-link toc-item">Interface Diagram</a><a href="design-notes.html#api-service-exposed" class="toc-link toc-item">API Service Exposed</a><a href="design-notes.html#services-endpoint" class="toc-link toc-item">Services Endpoint</a><a href="design-notes.html#access-account" class="toc-link toc-item">Access Account</a><a href="design-notes.html#process-flow" class="toc-link toc-item">Process Flow</a><a href="design-notes.html#about-the-role" class="toc-link toc-item">About The Role</a></div><div class="toc-group"><div class="toc-group-label">ShopService</div><a href="shop-service.html" class="toc-link toc-service">ShopService</a><a href="shop-service.html#methods-shopservice" class="toc-link toc-service">Methods: ShopService</a><a href="shop-service.html#method-retrieveroute" class="toc-link toc-method">Method: RetrieveRoute</a><a href="shop-service.html#method-retrievessim" class="toc-link toc-method">Method: RetrieveSsim</a><a href="shop-service.html#method-airavailability" class="toc-link toc-method">Method: AirAvailability</a><a href="shop-service.html#method-throughflightinfo" class="toc-link toc-method">Method: ThroughFlightInfo</a><a href="shop-service.html#method-fareruledescription-(deprecated)" class="toc-link toc-method">Method: FareRuleDescription (deprecated)</a><a href="shop-service.html#method-fareruledescriptionbyroute" class="toc-link toc-method">Method: FareRuleDescriptionByRoute</a><a href="shop-service.html#method-freebaggageallowance" class="toc-link toc-method">Method: FreeBaggageAllowance</a><a href="shop-service.html#method-farequote" class="toc-link toc-method">Method: FareQuote</a><a href="shop-service.html#method-ancillaryavailability" class="toc-link toc-method">Method: AncillaryAvailability</a><a href="shop-service.html#method-mealavailability" class="toc-link toc-method">Method: MealAvailability</a><a href="shop-service.html#method-baggageavailability" class="toc-link toc-method">Method: BaggageAvailability</a><a href="shop-service.html#method-seatavailability" class="toc-link toc-method">Method: SeatAvailability</a><a href="shop-service.html#method-bundleavailability" class="toc-link toc-method">Method: BundleAvailability</a><a href="shop-service.html#method-retrievepaxtypediscount" class="toc-link toc-method">Method: RetrievePaxTypeDiscount</a></div><div class="toc-group"><div class="toc-group-label">BookService</div><a href="book-service.html" class="toc-link toc-service">BookService</a><a href="book-service.html#methods-bookservice" class="toc-link toc-service">Methods: BookService</a><a href="book-service.html#method-markseats" class="toc-link toc-method">Method: MarkSeats</a><a href="book-service.html#method-createbooking" class="toc-link toc-method">Method: CreateBooking</a><a href="book-service.html#method-retrievebooking" class="toc-link toc-method">Method: RetrieveBooking</a><a href="book-service.html#method-confirmprice" class="toc-link toc-method">Method: ConfirmPrice</a><a href="book-service.html#method-modifybooking" class="toc-link toc-method">Method: ModifyBooking</a><a href="book-service.html#method-retrieveagencycredit" class="toc-link toc-method">Method: RetrieveAgencyCredit</a><a href="book-service.html#method-enhancedairavailability" class="toc-link toc-method">Method: EnhancedAirAvailability</a><a href="book-service.html#method-traveldocuments" class="toc-link toc-method">Method: TravelDocuments</a><a href="book-service.html#method-splitbooking" class="toc-link toc-method">Method: SplitBooking</a><a href="book-service.html#method-changecontactpoint" class="toc-link toc-method">Method: ChangeContactPoint</a><a href="book-service.html#method-confirmschedulechange" class="toc-link toc-method">Method: ConfirmScheduleChange</a><a href="book-service.html#method-confirmcancelprice" class="toc-link toc-method">Method: ConfirmCancelPrice</a><a href="book-service.html#method-cancelbooking" class="toc-link toc-method">Method: CancelBooking</a><a href="book-service.html#method-senditinerary" class="toc-link toc-method">Method: SendItinerary</a><a href="book-service.html#method-changeguestcontactpoint" class="toc-link toc-method">Method: ChangeGuestContactPoint</a><a href="book-service.html#method-confirmcancelinfant" class="toc-link toc-method">Method: ConfirmCancelInfant</a><a href="book-service.html#method-cancelinfant" class="toc-link toc-method">Method: CancelInfant</a><a href="book-service.html#method-releaseancillary" class="toc-link toc-method">Method: ReleaseAncillary</a><a href="book-service.html#method-kakaopayready" class="toc-link toc-method">Method: KakaopayReady</a><a href="book-service.html#method-generateancillaryauthtoken" class="toc-link toc-method">Method: GenerateAncillaryAuthToken</a><a href="book-service.html#method-retrieveancillaryauthtokenstatus" class="toc-link toc-method">Method: RetrieveAncillaryAuthTokenStatus</a></div><div class="toc-group"><div class="toc-group-label">PostBookService</div><a href="postbook-service.html" class="toc-link toc-service">PostBookService</a><a href="postbook-service.html#method-calendarfare-(deprecated)" class="toc-link toc-method">Method: CalendarFare (deprecated)</a><a href="postbook-service.html#method-boardingpassinfo" class="toc-link toc-method">Method: BoardingPassInfo</a><a href="postbook-service.html#method-dailysalesreportsummary" class="toc-link toc-method">Method: DailySalesReportSummary</a><a href="postbook-service.html#method-dailyrevenuereportsummary" class="toc-link toc-method">Method: DailyRevenueReportSummary</a><a href="postbook-service.html#method-dailysalesreportrealtime" class="toc-link toc-method">Method: DailySalesReportRealTime</a></div><div class="toc-group"><div class="toc-group-label">CheckinService</div><a href="checkin-service.html" class="toc-link toc-service">CheckinService</a><a href="checkin-service.html#method-checkinavailability" class="toc-link toc-method">Method: CheckinAvailability</a><a href="checkin-service.html#method-searchguest" class="toc-link toc-method">Method: SearchGuest</a><a href="checkin-service.html#method-checkinseatavailability" class="toc-link toc-method">Method: CheckinSeatAvailability</a><a href="checkin-service.html#method-checkinguest" class="toc-link toc-method">Method: CheckinGuest</a><a href="checkin-service.html#method-uncheckinguest" class="toc-link toc-method">Method: UnCheckinGuest</a></div><div class="toc-group"><div class="toc-group-label">Complex Types</div><a href="complex-types.html" class="toc-link toc-service">Complex Types</a><a href="simple-types.html" class="toc-link toc-item">Simple Types</a></div><div class="toc-group"><div class="toc-group-label">Appendix</div><a href="appendix.html" class="toc-link toc-service">Appendix</a><a href="appendix.html#appendix-1-error-codes" class="toc-link toc-item">Appendix 1 – Error Codes</a><a href="appendix.html#appendix-2-encrypt-seed" class="toc-link toc-item">Appendix 2 – Encrypt Seed</a><a href="appendix.html#appendix-3" class="toc-link toc-item">Appendix 3 – EasyPay(KICC)</a><a href="appendix.html#appendix-4" class="toc-link toc-item">Appendix 4 – Naverpay</a><a href="appendix.html#appendix-5-connection-flight" class="toc-link toc-item">Appendix 5 – Connection Flight</a></div></div>
+  </div>
+</main>
+<script>
+function copyXml(blockId) {
+  const block = document.getElementById(blockId);
+  const code = block.querySelector('.xml-code');
+  const raw = code.dataset.raw || code.textContent;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = block.querySelector('.copy-btn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 18 4 13"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = raw; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn = block.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2v1"/></svg> Copy'; }, 2000);
+  });
+}
+</script>
+<script>
+const page=location.pathname.split('/').pop().replace('.html','')||'overview';
+document.querySelectorAll('.nav-link').forEach(a=>{if(a.dataset.page===page)a.classList.add('active');});
+</script>
+</body>
+</html>

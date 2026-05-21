@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Appendix — T'wayair Booking API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4f1;--surface:#ffffff;--surface2:#f0ece8;--border:#ddd8d2;
+  --accent:#6b6158;--accent2:#8e7d70;--accent-lt:#a69488;
+  --text:#1a1614;--text-muted:#5a504a;--text-dim:#9e948e;
+  --green:#4a7c59;--orange:#b85c2a;--red:#b83232;--link:#5a4a3a;
+  --nav-w:260px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  /* XML syntax colors – dark panel on light bg */
+  --xml-bg:#141210;--xml-border:#3a322c;
+  --xt:#7ecfb3;   /* tag name */
+  --xb:#a69070;   /* bracket / slash */
+  --xa:#c0a880;   /* attr name = " */
+  --xv:#e8c88a;   /* attr value */
+  --xpi:#888;     /* processing instruction */
+  --xtext:#ede8e3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.7}
+nav{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;display:flex;flex-direction:column;overflow-y:auto;box-shadow:2px 0 8px rgba(107,97,88,.08)}
+.nav-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);background:var(--accent)}
+.nav-brand .logo{font-family:var(--mono);font-size:11px;color:#fff;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.nav-brand .ver{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);margin-top:3px}
+.nav-section{padding:8px 0}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:10px 16px 4px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 16px;color:var(--text-muted);text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(107,97,88,.07);font-weight:600}
+main{margin-left:var(--nav-w);flex:1;min-width:0}
+.topbar{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 32px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(107,97,88,.1)}
+.topbar-icon{font-size:18px}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.02em}
+.topbar-badge{margin-left:auto;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px}
+.content{padding:32px 40px;max-width:980px}
+h1{font-size:24px;font-weight:700;color:var(--text);margin:28px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+h1:first-child{margin-top:0}
+h2{font-size:17px;font-weight:700;color:var(--accent);margin:26px 0 10px;font-family:var(--mono);padding-left:10px;border-left:3px solid var(--accent)}
+h3{font-size:14px;font-weight:700;color:var(--green);margin:18px 0 8px;font-family:var(--mono)}
+h4{font-size:12px;font-weight:700;color:var(--orange);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+p{margin-bottom:10px;color:var(--text)}
+li{margin-left:20px;margin-bottom:4px;color:var(--text)}
+a{color:var(--link);text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:2px;transition:color .12s}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+strong{color:var(--text);font-weight:700}
+code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange);border:1px solid var(--border)}
+pre:not(.xml-pre){background:#1e1a17;border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;margin:12px 0}
+pre:not(.xml-pre) code{background:none;padding:0;font-size:12px;color:#d4ccc5;white-space:pre;border:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border:1px solid var(--accent2);text-align:left}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--text);vertical-align:top}
+tr:nth-child(even) td{background:rgba(107,97,88,.04)}
+tr:hover td{background:rgba(107,97,88,.08)}
+
+/* ── XML blocks ── */
+.xml-block{margin:12px 0;border:1px solid var(--xml-border);border-radius:7px;overflow:hidden;background:var(--xml-bg)}
+.xml-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--xml-border)}
+.xml-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent-lt);letter-spacing:.06em;text-transform:uppercase}
+.copy-btn{display:flex;align-items:center;gap:5px;background:rgba(107,97,88,.25);color:#c8b8a8;border:1px solid rgba(107,97,88,.4);border-radius:4px;padding:3px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:rgba(107,97,88,.5);color:#fff}
+.copy-btn.copied{background:rgba(74,124,89,.3);color:#7ecfb3;border-color:rgba(74,124,89,.5)}
+.xml-pre{margin:0;padding:16px;overflow-x:auto;background:transparent;border:none;border-radius:0}
+.xml-code{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#ede8e3;white-space:pre}
+.xml-code .xt{color:#60d9a8}
+.xml-code .xb{color:#d4a85a}
+.xml-code .xa{color:#d4b896}
+.xml-code .xv{color:#f5d97a}
+.xml-code .xpi{color:#a8a8a8}
+/* sample section wrapper */
+.sample-section{margin:16px 0}
+.sample-section-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding:6px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent)}
+
+.menu-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--accent);border:none;color:#fff;padding:7px 11px;border-radius:6px;cursor:pointer;font-size:16px}
+@media(max-width:768px){
+  .menu-toggle{display:block}
+  nav{transform:translateX(-100%);transition:transform .2s;z-index:50}
+  nav.open{transform:translateX(0)}
+  main{margin-left:0}
+  .content{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')">☰</button>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">T'wayair Booking API</div>
+    <div class="ver">Design Notes v4.0.6.8</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Documentation</div>
+    <a href="overview.html" class="nav-link" data-page="overview">🏠 Table of Contents</a><a href="history.html" class="nav-link" data-page="history">📋 History</a><a href="design-notes.html" class="nav-link" data-page="design-notes">📐 Design Notes</a><a href="shop-service.html" class="nav-link" data-page="shop-service">🛒 ShopService</a><a href="book-service.html" class="nav-link" data-page="book-service">📗 BookService</a><a href="postbook-service.html" class="nav-link" data-page="postbook-service">📮 PostBookService</a><a href="checkin-service.html" class="nav-link" data-page="checkin-service">✅ CheckinService</a><a href="complex-types.html" class="nav-link" data-page="complex-types">🔷 Complex Types</a><a href="simple-types.html" class="nav-link" data-page="simple-types">🔹 Simple Types</a><a href="appendix.html" class="nav-link" data-page="appendix">📎 Appendix</a>
+  </div>
+</nav>
+<main>
+  <div class="topbar">
+    <span class="topbar-icon">📎</span>
+    <span class="topbar-title">Appendix</span>
+    <span class="topbar-badge">v4.0.6.8</span>
+  </div>
+  <div class="content">
+    
+<p>See Also</p>
+
+<li><a href="appendix.html#appendix-1-error-codes">Error Codes</a></li>
+
+<li><a href="appendix.html#appendix-2-encrypt-seed">Encrypt Seed</a></li>
+
+<li><a href="appendix.html#appendix-3">Required input value for issued korea card on EasyPay(KICC)</a></li>
+
+<h2 id="appendix-1--error-codes"><a href="appendix.html#appendix-1-error-codes">Appendix 1 – <a href="appendix.html#appendix-1-error-codes">Error Codes</a></a></h2>
+
+<p>The <a href="appendix.html#appendix-1-error-codes">Error Codes</a> specified along with the services are the list of exceptions that will be thrown from these services. If any undocumented error code is returned then the t’wayair API will respond with a generic error code ‘WS_000’. The message of this generic error code will contain the detailed message of the Error that has occurred. The Runtime exceptions like Unexpected Server Error, Parse Exception etc are not documented and will not be mapped to the generic Error code as mentioned above.</p>
+
+<table>
+<tr><th><strong>ErrorCode</strong></th><th><strong>Error Message</strong></th></tr>
+<tr><td>ERR000</td><td>We are currently undergoing system maintenance to ensure a more stable service. We kindly ask for your understanding.</td></tr>
+<tr><td>ERR001</td><td>Validation Failed : AvailabilitySearches is mandatory</td></tr>
+<tr><td>ERR002</td><td>Validation Failed : Origin is mandatory</td></tr>
+<tr><td>ERR003</td><td>Validation Failed : Destination is mandatory</td></tr>
+<tr><td>ERR004</td><td>Validation Failed : TravelDate is mandatory</td></tr>
+<tr><td>ERR005</td><td>Validation Failed : PaxCountDetails is mandatory</td></tr>
+<tr><td>ERR006</td><td>Validation Failed : PaxType is mandatory</td></tr>
+<tr><td>ERR007</td><td>Validation Failed : PaxCount is mandatory</td></tr>
+<tr><td>ERR008</td><td>Validation Failed : <a href="complex-types.html#triptype">TripType</a> is mandatory</td></tr>
+<tr><td>ERR009</td><td>Validation Failed : AgencyCode is mandatory</td></tr>
+<tr><td>ERR010</td><td>Validation Failed : Requested AgencyCode is invalid</td></tr>
+<tr><td>ERR011</td><td>Validation Failed : Expected PaxType is ADULT│CHILD│INFANT</td></tr>
+<tr><td>ERR012</td><td>Validation Failed : ADULT PaxType is mandatory</td></tr>
+<tr><td>ERR013</td><td>Validation Failed : Maximum number of passengers allowed is 9</td></tr>
+<tr><td>ERR014</td><td>Validation Failed : Number of INFANT PaxType allowed is less than or equal to the number of ADULT PaxType</td></tr>
+<tr><td>ERR015</td><td>Validation Failed : Expected <a href="complex-types.html#triptype">TripType</a> is OW│RT│MC</td></tr>
+<tr><td>ERR016</td><td>Validation Failed : Requested route(%s-%s) is not available</td></tr>
+<tr><td>ERR017</td><td>Validation Failed : FlightIdentifier is mandatory</td></tr>
+<tr><td>ERR018</td><td>Validation Failed : fltNumber is mandatory</td></tr>
+<tr><td>ERR019</td><td>Validation Failed : flightDate is mandatory</td></tr>
+<tr><td>ERR020</td><td>Validation Failed : Date is mandatory</td></tr>
+<tr><td>ERR021</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>BasisCode is mandatory</td></tr>
+<tr><td>ERR022</td><td>Validation Failed : AgencyCode mismatch</td></tr>
+<tr><td>ERR023</td><td>Validation Failed : ItineraryInfo is mandatory</td></tr>
+<tr><td>ERR024</td><td>Validation Failed : Flight<a href="complex-types.html#segmentinfo">SegmentInfo</a> is mandatory</td></tr>
+<tr><td>ERR025</td><td>Validation Failed : carrierCode is mandatory</td></tr>
+<tr><td>ERR026</td><td>Validation Failed : boardPoint is mandatory</td></tr>
+<tr><td>ERR027</td><td>Validation Failed : offPoint is mandatory</td></tr>
+<tr><td>ERR028</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Class is mandatory</td></tr>
+<tr><td>ERR029</td><td>Validation Failed : SegmentId is mandatory</td></tr>
+<tr><td>ERR030</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Info is mandatory</td></tr>
+<tr><td>ERR031</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>InfoForGuestType is mandatory</td></tr>
+<tr><td>ERR032</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Type is mandatory</td></tr>
+<tr><td>ERR033</td><td>Validation Failed : GuestType is mandatory</td></tr>
+<tr><td>ERR034</td><td>Validation Failed : Base<a href="complex-types.html#fare">Fare</a> is mandatory</td></tr>
+<tr><td>ERR035</td><td>Validation Failed : Currency is mandatory</td></tr>
+<tr><td>ERR036</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>TransactionID is mandatory</td></tr>
+<tr><td>ERR037</td><td>Validation Failed : Incorrect PnrNumber.</td></tr>
+<tr><td>ERR038</td><td>Validation Failed : PaxIds is mandatory</td></tr>
+<tr><td>ERR038</td><td>Validation Failed : ActionType is mandatory</td></tr>
+<tr><td>ERR040</td><td>Validation Failed : MarkInventoryDetails is mandatory</td></tr>
+<tr><td>ERR041</td><td>Validation Failed : PnrNumber is mandatory</td></tr>
+<tr><td>ERR042</td><td>Validation Failed : Expected ActionType is MARK│UNMARK</td></tr>
+<tr><td>ERR043</td><td>Validation Failed : PnrSessionId is mandatory</td></tr>
+<tr><td>ERR044</td><td>Validation Failed : Invalid Date format. Expected Date format is yyyy-MM-dd</td></tr>
+<tr><td>ERR045</td><td>Validation Failed : stops is mandatory</td></tr>
+<tr><td>ERR046</td><td>Validation Failed : DepartureTimeZone is mandatory</td></tr>
+<tr><td>ERR047</td><td>Validation Failed : ArrivalTimeZone is mandatory</td></tr>
+<tr><td>ERR048</td><td>Validation Failed : Invalid DepartureTimeZone</td></tr>
+<tr><td>ERR049</td><td>Validation Failed : Invalid ArrivalTimeZone</td></tr>
+<tr><td>ERR050</td><td>Validation Failed : Invalid Request Format</td></tr>
+<tr><td>ERR051</td><td>Validation Failed : GuestDetails is mandatory</td></tr>
+<tr><td>ERR052</td><td>Validation Failed : SurName is mandatory</td></tr>
+<tr><td>ERR053</td><td>Validation Failed : GivenName is mandatory</td></tr>
+<tr><td>ERR054</td><td>Validation Failed : Mismatch in <a href="complex-types.html#triptype">TripType</a></td></tr>
+<tr><td>ERR055</td><td>Validation Failed : Gender is mandatory</td></tr>
+<tr><td>ERR056</td><td>Validation Failed : GuestId is mandatory</td></tr>
+<tr><td>ERR057</td><td>Validation Failed : PnrContact is mandatory</td></tr>
+<tr><td>ERR058</td><td>Validation Failed : Address is mandatory</td></tr>
+<tr><td>ERR059</td><td>Validation Failed : Cannot cancel this segment for International route</td></tr>
+<tr><td>ERR060</td><td>Validation Failed : CellNumber is mandatory</td></tr>
+<tr><td>ERR061</td><td>Validation Failed : EmailAddress is mandatory</td></tr>
+<tr><td>ERR062</td><td>Validation Failed : ParentGuestID is mandatory</td></tr>
+<tr><td>ERR063</td><td>Validation Failed : Requested Flight(s) contain schedule overlap</td></tr>
+<tr><td>ERR064</td><td>Validation Failed : Invalid GuestType</td></tr>
+<tr><td>ERR065</td><td>Validation Failed : Invalid Gender</td></tr>
+<tr><td>ERR066</td><td>Validation Failed : Segment is already cancelled</td></tr>
+<tr><td>ERR067</td><td>Validation Failed : No active SSR codes available</td></tr>
+<tr><td>ERR068</td><td>Validation Failed : TravelDocumentNumber is mandatory</td></tr>
+<tr><td>ERR069</td><td>Validation Failed : TravelDocumentIssueDate is mandatory</td></tr>
+<tr><td>ERR070</td><td>Validation Failed : Nationality is mandatory</td></tr>
+<tr><td>ERR072</td><td>Validation Failed : DateOfBirth is mandatory</td></tr>
+<tr><td>ERR073</td><td>Validation Failed : Country is mandatory</td></tr>
+<tr><td>ERR074</td><td>Validation Failed : AddressOne is mandatory</td></tr>
+<tr><td>ERR075</td><td>Validation Failed : AddressTwo is mandatory</td></tr>
+<tr><td>ERR076</td><td>Validation Failed : City is mandatory</td></tr>
+<tr><td>ERR077</td><td>Validation Failed : ProvinceOrState is mandatory</td></tr>
+<tr><td>ERR078</td><td>Validation Failed : ZipCode is mandatory</td></tr>
+<tr><td>ERR079</td><td>Validation Failed : Expected ActionType is ISSUE_TICKET│ITR_CHANGE│ADD_ANCILLARY│ADD_INFANT</td></tr>
+<tr><td>ERR080</td><td>Validation Failed : TravelDocumentCountryOfIssue is mandatory</td></tr>
+<tr><td>ERR081</td><td>Validation Failed : TravelDocumentexpirydate is mandatory</td></tr>
+<tr><td>ERR082</td><td>Validation Failed : PromoCode is mandatory</td></tr>
+<tr><td>ERR083</td><td>Validation Failed : <a href="complex-types.html#itinerarychangetype">ItineraryChangeType</a> is mandatory</td></tr>
+<tr><td>ERR084</td><td>Validation Failed : <a href="complex-types.html#paxchangetype">PaxChangeType</a> is mandatory</td></tr>
+<tr><td>ERR085</td><td>Validation Failed : <a href="complex-types.html#ssrmodifytype">SsrModifyType</a> is mandatory</td></tr>
+<tr><td>ERR086</td><td>Validation Failed : <a href="complex-types.html#ssrinfotype">SsrInfoType</a> is mandatory</td></tr>
+<tr><td>ERR087</td><td>Validation Failed : OriginAirport is mandatory</td></tr>
+<tr><td>ERR088</td><td>Validation Failed : DestinationAirport is mandatory</td></tr>
+<tr><td>ERR089</td><td>Validation Failed : StartDate is mandatory</td></tr>
+<tr><td>ERR090</td><td>Validation Failed : EndDate is mandatory</td></tr>
+<tr><td>ERR091</td><td>Validation Failed : PointOfPurchase is mandatory</td></tr>
+<tr><td>ERR092</td><td>Validation Failed : Invalid PointOfPurchase.</td></tr>
+<tr><td>ERR093</td><td>Validation Failed : Expected RouteType is D│I</td></tr>
+<tr><td>ERR094</td><td>Validation Failed : GuestPaymentDetails is mandatory</td></tr>
+<tr><td>ERR095</td><td>Validation Failed : PaymentAmount is mandatory</td></tr>
+<tr><td>ERR096</td><td>Validation Failed : Invalid PaymentAmount</td></tr>
+<tr><td>ERR097</td><td>Validation Failed : PaymentCurrency is mandatory</td></tr>
+<tr><td>ERR098</td><td>Validation Failed : Unsupported GuestType</td></tr>
+<tr><td>ERR099</td><td>Validation Failed : PaymentSummary is mandatory</td></tr>
+<tr><td>ERR100</td><td>Validation Failed : Unsupported PaxSubType</td></tr>
+<tr><td>ERR101</td><td>Validation Failed : Invalid GivenName</td></tr>
+<tr><td>ERR102</td><td>Validation Failed : Invalid SurName</td></tr>
+<tr><td>ERR103</td><td>Validation Failed : DateOfBirth is mandatory</td></tr>
+<tr><td>ERR104</td><td>Validation Failed : Invalid DateOfBirth</td></tr>
+<tr><td>ERR105</td><td>Validation Failed : Invalid range of days. we allow %d days from StartDate to EndDate.</td></tr>
+<tr><td>ERR106</td><td>Validation Failed : FormOfPaymentCode is mandatory</td></tr>
+<tr><td>ERR107</td><td>Validation Failed : AccountName is mandatory</td></tr>
+<tr><td>ERR108</td><td>Validation Failed : AccountContact is mandatory</td></tr>
+<tr><td>ERR109</td><td>Validation Failed : TotalPaymentAmount is mandatory</td></tr>
+<tr><td>ERR110</td><td>Validation Failed : <a href="complex-types.html#cardinfo">CardInfo</a> is mandatory</td></tr>
+<tr><td>ERR111</td><td>Validation Failed : Expected FormOfPaymentCode is CC│WA│AG│CCAG│NP│SP│NPAG│SPAG</td></tr>
+<tr><td>ERR112</td><td>Validation Failed : <a href="complex-types.html#agencycreditinfo">AgencyCreditInfo</a> is mandatory</td></tr>
+<tr><td>ERR113</td><td>Validation Failed : CardAuthType is mandatory</td></tr>
+<tr><td>ERR114</td><td>Validation Failed : Expected CardAuthType is MPI│ISP│ECON│NONE│OFFLINE│GLOBAL</td></tr>
+<tr><td>ERR115</td><td>Validation Failed : Expected Installment is between 00~12</td></tr>
+<tr><td>ERR116</td><td>Validation Failed : AGPassword is mandatory</td></tr>
+<tr><td>ERR117</td><td>Validation Failed : <a href="complex-types.html#mpiauthinfo">MPIAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR118</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#mpiauthinfo">MPIAuthInfo</a></td></tr>
+<tr><td>ERR119</td><td>Validation Failed : <a href="complex-types.html#ispauthinfo">ISPAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR120</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#ispauthinfo">ISPAuthInfo</a></td></tr>
+<tr><td>ERR121</td><td>Validation Failed : <a href="complex-types.html#econauthinfo">ECONAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR122</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#econauthinfo">ECONAuthInfo</a></td></tr>
+<tr><td>ERR123</td><td>Validation Failed : <a href="complex-types.html#noneauthinfo">NONEAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR124</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#noneauthinfo">NONEAuthInfo</a></td></tr>
+<tr><td>ERR125</td><td>Validation Failed : Mismatch of PaymentCurrency in request</td></tr>
+<tr><td>ERR126</td><td>Validation Failed : Mismatch of PaymentAmount in request</td></tr>
+<tr><td>ERR127</td><td>Validation Failed : Invalid Base<a href="complex-types.html#fare">Fare</a></td></tr>
+<tr><td>ERR128</td><td>Validation Failed : <a href="complex-types.html#segmentchangetype">SegmentChangeType</a> is mandatory</td></tr>
+<tr><td>ERR129</td><td>Validation Failed : OldSegmentGroupId is mandatory</td></tr>
+<tr><td>ERR130</td><td>Validation Failed : Unsupported PaymentCurrency</td></tr>
+<tr><td>ERR131</td><td>Validation Failed : Unsupported CardAuthType for requested AgencyCode</td></tr>
+<tr><td>ERR132</td><td>Validation Failed : Expected IsCorporateCard is TRUE│FALSE</td></tr>
+<tr><td>ERR133</td><td>Validation Failed : Incorrect TotalPaymentAmount</td></tr>
+<tr><td>ERR134</td><td>Validation Failed : Invalid TotalPaymentAmount</td></tr>
+<tr><td>ERR135</td><td>Validation Failed : Invalid ExpireDate</td></tr>
+<tr><td>ERR136</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Level is mandatory</td></tr>
+<tr><td>ERR137</td><td>Validation Failed : Incorrect GuestId</td></tr>
+<tr><td>ERR138</td><td>Validation Failed : Additional payment is required. %s is mandatory</td></tr>
+<tr><td>ERR139</td><td>Validation Failed : Expected ActionType is PNR│SEG</td></tr>
+<tr><td>ERR140</td><td>Validation Failed : Incorrect SegmentId</td></tr>
+<tr><td>ERR141</td><td>Validation Failed : Incorrect OldSegmentGroupId</td></tr>
+<tr><td>ERR142</td><td>Validation Failed : CONFIRMED segments are unavailable for this PNR</td></tr>
+<tr><td>ERR143</td><td>Validation Failed : LanguageCode is mandatory</td></tr>
+<tr><td>ERR144</td><td>Validation Failed : SSR for %s unavailable for this boarding time</td></tr>
+<tr><td>ERR145</td><td>Validation Failed : Segment is not CONFIRMED</td></tr>
+<tr><td>ERR146</td><td>Validation Failed : SSR for %s unavailable for CodeShare Flights</td></tr>
+<tr><td>ERR147</td><td>Validation Failed : Requested Date is before Current Date</td></tr>
+<tr><td>ERR148</td><td>Validation Failed : SSR information is unavailable</td></tr>
+<tr><td>ERR149</td><td>Validation Failed : PNR does not contain segments for SCHEDULE CHANGE</td></tr>
+<tr><td>ERR150</td><td>Validation Failed : Expected ActionType is ACCEPT│REJECT</td></tr>
+<tr><td>ERR151</td><td>Validation Failed : IPAddress is mandatory</td></tr>
+<tr><td>ERR152</td><td>Validation Failed : Invalid IPAdress</td></tr>
+<tr><td>ERR153</td><td>Validation Failed : SsrCode is mandatory</td></tr>
+<tr><td>ERR154</td><td>Validation Failed : <a href="complex-types.html#baggageinfo">BaggageInfo</a> is mandatory</td></tr>
+<tr><td>ERR155</td><td>Validation Failed : BaggageAddType is mandatory</td></tr>
+<tr><td>ERR156</td><td>Validation Failed : Expected BaggageAddType is WT│PC</td></tr>
+<tr><td>ERR157</td><td>Validation Failed : BaggageValue is mandatory</td></tr>
+<tr><td>ERR158</td><td>Validation Failed : <a href="complex-types.html#seatassignmentinfo">SeatAssignmentInfo</a> is mandatory</td></tr>
+<tr><td>ERR159</td><td>Validation Failed : PC feature in BaggageAddType is currently unavailable</td></tr>
+<tr><td>ERR160</td><td>Validation Failed : Incorrect ParentGuestID</td></tr>
+<tr><td>ERR161</td><td>Validation Failed : Two infants cannot be associated to a common ParentGuestID</td></tr>
+<tr><td>ERR162</td><td>Validation Failed : Duplicate GuestId</td></tr>
+<tr><td>ERR163</td><td>Validation Failed : Incorrect SsrCode</td></tr>
+<tr><td>ERR164</td><td>Validation Failed : Expected BaggageValue is between %s~%s</td></tr>
+<tr><td>ERR165</td><td>Validation Failed : Incorrect PaymentCurrency</td></tr>
+<tr><td>ERR166</td><td>Validation Failed : Incorrect PaymentAmount</td></tr>
+<tr><td>ERR167</td><td>Validation Failed : SeatNumber is mandatory</td></tr>
+<tr><td>ERR168</td><td>Validation Failed : PaymentAmount should be greater than 0</td></tr>
+<tr><td>ERR169</td><td>Validation Failed : No additional PaymentAmount required for GuestId %s</td></tr>
+<tr><td>ERR170</td><td>Validation Failed : Expected CardType is MASTERCARD│VISA│JCB│AMEX</td></tr>
+<tr><td>ERR171</td><td>Validation Failed : Invalid CardNumber for CardType %s</td></tr>
+<tr><td>ERR172</td><td>Validation Failed : Incomplete %s compared to %s in request</td></tr>
+<tr><td>ERR173</td><td>Validation Failed : Duplicate SegmentId</td></tr>
+<tr><td>ERR174</td><td>Validation Failed : Mismatch in count of GuestDetails and PaxCountDetails in request</td></tr>
+<tr><td>ERR175</td><td>Validation Failed : Mismatch in DateOfBirth of GuestDetails and <a href="book-service.html#method-traveldocuments">TravelDocuments</a>Details in request.</td></tr>
+<tr><td>ERR176</td><td>Validation Failed : Requested Segment is not CONFIRMED</td></tr>
+<tr><td>ERR177</td><td>Validation Failed : Incorrect %s in <a href="book-service.html#method-traveldocuments">TravelDocuments</a></td></tr>
+<tr><td>ERR178</td><td>Validation Failed : Incorrect %s in DestinationResidence</td></tr>
+<tr><td>ERR179</td><td>Validation Failed : Invalid CellNumber. Please set Number only.</td></tr>
+<tr><td>ERR180</td><td>Validation Failed : RouteType is mandatory (D│I).</td></tr>
+<tr><td>ERR181</td><td>Validation Failed : SalesStartDate is mandatory (yyyy-MM-dd).</td></tr>
+<tr><td>ERR182</td><td>Validation Failed : SalesEndDate is mandatory (yyyy-MM-dd).</td></tr>
+<tr><td>ERR183</td><td>Validation Failed : Not allow the future dates.</td></tr>
+<tr><td>ERR184</td><td>Validation Failed : BarCode is mandatory.</td></tr>
+<tr><td>ERR185</td><td>Validation Failed : barCode length is too short.</td></tr>
+<tr><td>ERR186</td><td>Validation Failed : Invalid airline code for barCode.</td></tr>
+<tr><td>ERR187</td><td>Validation Failed : Invalid format code for barCode.</td></tr>
+<tr><td>ERR188</td><td>Validation Failed : Invalid document type for barCode.</td></tr>
+<tr><td>ERR189</td><td>Validation Failed : Seat Number is different from barcode.</td></tr>
+<tr><td>ERR190</td><td>Validation Failed : Invalid checkIn sequence for barcode.</td></tr>
+<tr><td>ERR191</td><td>Validation Failed : Estimated time of departure has passed.</td></tr>
+<tr><td>ERR192</td><td>Validation Failed : Not allow cancel and rebook for connection flights.</td></tr>
+<tr><td>ERR193</td><td>Validation Failed : Requested date is after allowable date(%s).</td></tr>
+<tr><td>ERR194</td><td>Validation Failed : No the latest SSIM available.</td></tr>
+<tr><td>ERR195</td><td>Validation Failed : No weblink channel for agencycode %s.</td></tr>
+<tr><td>ERR196</td><td>Validation Failed : The length of %s is not correct. (%s digits[%s] is allowed)</td></tr>
+<tr><td>ERR197</td><td>Validation Failed : Requested SSR is already exists.</td></tr>
+<tr><td>ERR198</td><td>Validation Failed : Not allow add ancillary for GuestId %s that already have a bundle.</td></tr>
+<tr><td>ERR199</td><td>Validation Failed : Invalid fare combinations.</td></tr>
+<tr><td>ERR200</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>RuleSearches are mandatory.</td></tr>
+<tr><td>ERR201</td><td>Validation Failed : Invalid <a href="complex-types.html#fare">Fare</a>Type.</td></tr>
+<tr><td>ERR202</td><td>Validation Failed : No Nation Code Data.</td></tr>
+<tr><td>ERR203</td><td>Validation Failed : No <a href="complex-types.html#fare">Fare</a> Rule Description Data.</td></tr>
+<tr><td>ERR204</td><td>Validation Failed : Invalid SSR Code.</td></tr>
+<tr><td>ERR205</td><td>Adding ancillary is not available for CodeShare Flights.</td></tr>
+<tr><td>ERR206</td><td>Adding ancillary is not available for this route.</td></tr>
+<tr><td>ERR207</td><td>Adding ancillary is not available today.</td></tr>
+<tr><td>ERR208</td><td>Already purchased ancillary.</td></tr>
+<tr><td>ERR209</td><td>No available SSR.</td></tr>
+<tr><td>ERR210</td><td>Validation Failed : %s is not available for multi leg.</td></tr>
+<tr><td>ERR211</td><td>Validation failed : %s is not available for this route</td></tr>
+<tr><td>ERR212</td><td>Validation failed : FlightSegmentDetails is mandatory</td></tr>
+<tr><td>ERR213</td><td>Validation failed : FlightSegmentGroupId is mandatory</td></tr>
+<tr><td>ERR214</td><td>Validation failed : <a href="complex-types.html#fare">Fare</a>ComponentId is mandatory</td></tr>
+<tr><td>ERR215</td><td>Validation failed : Invalid FlightSegmentGroupId</td></tr>
+<tr><td>ERR216</td><td>Validation failed : Invalid FltNumber</td></tr>
+<tr><td>ERR217</td><td>Validation failed : Invalid FlightDate</td></tr>
+<tr><td>ERR218</td><td>Validation failed : Invalid DepAirport</td></tr>
+<tr><td>ERR219</td><td>Validation failed : Invalid ArrAirport</td></tr>
+<tr><td>ERR220</td><td>Validation failed : Invalid Stops</td></tr>
+<tr><td>ERR221</td><td>Validation failed : Invalid ArrivalDayChange</td></tr>
+<tr><td>ERR222</td><td>Validation failed : Invalid Currency</td></tr>
+<tr><td>ERR223</td><td>Validation failed : Invalid <a href="complex-types.html#fare">Fare</a>TransactionId</td></tr>
+<tr><td>ERR224</td><td>Validation failed : Bundle service is unavailable for this route</td></tr>
+<tr><td>ERR225</td><td>Validation failed : Bundle service is available until 4 (international) or 2 days(domestic) before departure date</td></tr>
+<tr><td>ERR226</td><td>Validation failed : Bundle service is unavailable for CodeShare Flights</td></tr>
+<tr><td>ERR227</td><td>No available Bundle Services for this Seg</td></tr>
+<tr><td>ERR228</td><td>Validation failed : Bundle is unavailable for multi leg</td></tr>
+<tr><td>ERR229</td><td>Validation failed : Bundle service is available until 4 (international) or 2 days(domestic) before departure date</td></tr>
+<tr><td>ERR230</td><td>Validation failed : Invalid LanguageCode</td></tr>
+<tr><td>ERR231</td><td>Validation failed : Invalid Bundle SSR Code</td></tr>
+<tr><td>ERR232</td><td>Validation failed : Invalid Meal SSR Code</td></tr>
+<tr><td>ERR233</td><td>Validation failed : Expected SsrType is BUNDLE│SEAT│MEAL│EXBG</td></tr>
+<tr><td>ERR234</td><td>Validation failed : Invalid BaggageValue Please set Number only</td></tr>
+<tr><td>ERR235</td><td>Validation failed : Invalid isTicketed value</td></tr>
+<tr><td>ERR236</td><td>Validation failed : IsTicketed is mandatory</td></tr>
+<tr><td>ERR237</td><td>Validation failed : Meal SSR Code is mandatory</td></tr>
+<tr><td>ERR238</td><td>Validation failed : <a href="complex-types.html#mealinfo">MealInfo</a> is mandatory</td></tr>
+<tr><td>ERR239</td><td>Validation failed : SsrType is mandatory</td></tr>
+<tr><td>ERR240</td><td>Validation failed : CellNumber and CellNumberCountryCode must exists in pairs</td></tr>
+<tr><td>ERR241</td><td>Validation failed : Not allow to cancel booking paid in cash.</td></tr>
+<tr><td>ERR242</td><td>Validation failed : Not allow to cancel booking paid in multicurrency.</td></tr>
+<tr><td>ERR243</td><td>Validation Failed : SegmentId or SegmentGroupId is mandatory.</td></tr>
+<tr><td>ERR244</td><td>Validation failed : Cancel PNR when canceling all flights (ActionType : PNR)</td></tr>
+<tr><td>ERR245</td><td>Validation Failed : Incorrect SegmentGroupId</td></tr>
+<tr><td>ERR246</td><td>No available check-in status for cancellation.</td></tr>
+<tr><td>ERR247</td><td>Validation failed : No guestId for Cancel Infant</td></tr>
+<tr><td>ERR248</td><td>Validation failed : SsrType is mandatory</td></tr>
+<tr><td>ERR249</td><td>Validation failed : SsrId is mandatory</td></tr>
+<tr><td>ERR250</td><td>Validation failed : Expected SsrType is BUND│SEAT│MEAL│EXBG</td></tr>
+<tr><td>ERR251</td><td>Validation failed : No releasable SSR</td></tr>
+<tr><td>ERR252</td><td>Validation failed : No SSR in PNR</td></tr>
+<tr><td>ERR253</td><td>Validation failed : Unassigned seat</td></tr>
+<tr><td>ERR254</td><td>Validation failed : Not allow to modify/cancel due to the ticketing time.</td></tr>
+<tr><td>ERR255</td><td>Event <a href="complex-types.html#fare">Fare</a>s including ancillary bundle service are not allowed to purchase more pre-sell baggage.</td></tr>
+<tr><td>ERR256</td><td>Validation Failed : ItineraryInfoForAncillary is mandatory</td></tr>
+<tr><td>ERR257</td><td>Validation Failed : Flight<a href="complex-types.html#segmentinfo">SegmentInfo</a>ForAncillary is mandatory</td></tr>
+<tr><td>ERR258</td><td>Validation Failed : Duplicate SegmentGroupId</td></tr>
+<tr><td>ERR259</td><td>Validation Failed : SaleDate is mandatory</td></tr>
+<tr><td>ERR260</td><td>Validation Failed : Nationality is only allowed %s letter alphabet.</td></tr>
+<tr><td>ERR261</td><td>Validation Failed : AGAmount is mandatory.</td></tr>
+<tr><td>ERR262</td><td>Validation Failed : AGCCInfo is mandatory.</td></tr>
+<tr><td>ERR263</td><td>Validation Failed : Invalid length of {0}</td></tr>
+<tr><td>ERR264</td><td>Validation Failed : Invalid format of {0}</td></tr>
+<tr><td>ERR265</td><td>Validation Failed : No segment for confirm schedule change</td></tr>
+<tr><td>ERR266</td><td>Validation Failed : No IATA Agency Code for agencycode %s.</td></tr>
+<tr><td>ERR267</td><td>Validation Failed : Expected ActionType is %s for %s FormOfPaymentCode.</td></tr>
+<tr><td>ERR268</td><td>Validation Failed : PageNumber should be greater than 0</td></tr>
+<tr><td>ERR269</td><td>Validation Failed : PageNumber is mandatory.</td></tr>
+<tr><td>ERR270</td><td>Validation Failed : CreditCard brand is empty.</td></tr>
+<tr><td>ERR271</td><td>Validation Failed : <a href="complex-types.html#kakaopayinfo">KakaopayInfo</a> is mandatory.</td></tr>
+<tr><td>ERR272</td><td>Validation Failed : CompanyId is mandatory.</td></tr>
+<tr><td>ERR273</td><td>Validation Failed : Tid is mandatory.</td></tr>
+<tr><td>ERR274</td><td>Validation Failed : PartnerOrderId is mandatory.</td></tr>
+<tr><td>ERR275</td><td>Validation Failed : PartnerUserId is mandatory.</td></tr>
+<tr><td>ERR276</td><td>Validation Failed : PgToken is mandatory.</td></tr>
+<tr><td>ERR277</td><td>Validation Failed : Invalid PartnerOrderId format(yyyyMMddHHmmss-PNR-AgencyCode).</td></tr>
+<tr><td>ERR278</td><td>Validation Failed : Invalid PartnerUserId format(e-mail address).</td></tr>
+<tr><td>ERR279</td><td>Validation Failed : AuthKey is mandatory.</td></tr>
+<tr><td>ERR280</td><td>Validation Failed : ItemCode is mandatory.</td></tr>
+<tr><td>ERR281</td><td>Validation Failed : TotalAmount is mandatory.</td></tr>
+<tr><td>ERR282</td><td>Validation Failed : ApprovalUrl is mandatory.</td></tr>
+<tr><td>ERR283</td><td>Validation Failed : CancelUrl is mandatory.</td></tr>
+<tr><td>ERR284</td><td>Validation Failed : FailUrl is mandatory.</td></tr>
+<tr><td>ERR285</td><td>Validation Failed : TotalAmount should be greater than 0</td></tr>
+<tr><td>ERR286</td><td>Validation Failed : Mismatched TotalAmount in PNR.</td></tr>
+<tr><td>ERR287</td><td>Validation Failed : <a href="complex-types.html#naverpayinfo">NaverpayInfo</a> is mandatory.</td></tr>
+<tr><td>ERR288</td><td>Validation Failed : PaymentId is mandatory.</td></tr>
+<tr><td>ERR289</td><td>Validation Failed : TotalPaymentAmount of Naverpay should be greater than KRW 100.</td></tr>
+<tr><td>ERR290</td><td>Validation Failed : RequestId is mandatory</td></tr>
+<tr><td>ERR291</td><td>Validation Failed : The bundle cannot be canceled because purchased baggage</td></tr>
+<tr><td>ERR292</td><td>Validation Failed : SmilepayInfo is mandatory.</td></tr>
+<tr><td>ERR293</td><td>Validation Failed : EncAuthorizationId is mandatory.</td></tr>
+<tr><td>ERR294</td><td>Validation Failed : AuthorizationToken is mandatory.</td></tr>
+<tr><td>ERR295</td><td>Validation Failed : ShopTransactionId is mandatory.</td></tr>
+<tr><td>ERR296</td><td>Validation Failed : ShopOrderId is mandatory.</td></tr>
+<tr><td>ERR297</td><td>Validation Failed : Invalid EncAuthorizationId</td></tr>
+<tr><td>ERR298</td><td>Validation Failed : Invalid CabinClass</td></tr>
+<tr><td>ERR299</td><td>Validation Failed : This promotion code has already been used.</td></tr>
+<tr><td>ERR300</td><td>Validation Failed : Itinerary changes are not allowed due to promotion code rule.</td></tr>
+<tr><td>ERR301</td><td>Validation Failed : Reservation is not divided due to promotion code rule.</td></tr>
+<tr><td>ERR302</td><td>Validation Failed : Reservation cannot be cancelled due to promotion code rule.</td></tr>
+<tr><td>ERR303</td><td>Validation Failed : Online check-in is impossible to shared flights.</td></tr>
+<tr><td>ERR304</td><td>Validation Failed : Online check-in in the itinerary is not allowed.</td></tr>
+<tr><td>ERR305</td><td>Validation Failed : Online check-in is not possible in the dual section.</td></tr>
+<tr><td>ERR306</td><td>Validation Failed : Online check-in is available %s minutes before your flight’s scheduled departure time.</td></tr>
+<tr><td>ERR307</td><td>Validation Failed : Online check-in of the promotion code is not possible.</td></tr>
+<tr><td>ERR308</td><td>Validation Failed : <a href="complex-types.html#offlineauthinfo">OfflineAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR309</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#offlineauthinfo">OfflineAuthInfo</a></td></tr>
+<tr><td>ERR310</td><td>Validation Failed : Only 0 installment months are available.</td></tr>
+<tr><td>ERR311</td><td>Validation Failed : <a href="complex-types.html#globalauthinfo">GlobalAuthInfo</a> is mandatory</td></tr>
+<tr><td>ERR312</td><td>Validation Failed : %s is mandatory for <a href="complex-types.html#globalauthinfo">GlobalAuthInfo</a></td></tr>
+<tr><td>ERR313</td><td>Validation Failed : Only TRUE or FALSE are allowed in filed %s</td></tr>
+<tr><td>ERR314</td><td>Validation Failed : Invalid e-mail address.</td></tr>
+<tr><td>ERR315</td><td>Validation Failed : Invalid Cvc number</td></tr>
+<tr><td>ERR316</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Class in <a href="complex-types.html#fareinfotype">FareInfoType</a> does not match.</td></tr>
+<tr><td>ERR317</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>Class mismatch in <a href="complex-types.html#fareinfotype">FareInfoType</a> and <a href="complex-types.html#flightsegmentinfotype">Flight<a href="complex-types.html#segmentinfotype"><a href="complex-types.html#segmentinfo">SegmentInfo</a>Type</a></a> in the request.</td></tr>
+<tr><td>ERR318</td><td>Validation Failed : Long distance flights %s can be purchased on Tway website</td></tr>
+<tr><td>ERR319</td><td>Validation Failed : SSR for %s unavailable for business cabin class</td></tr>
+<tr><td>ERR320</td><td>Validation Failed : Baggage sales information does not matched.</td></tr>
+<tr><td>ERR321</td><td>Validation Failed : Incorrect BaggageAddType.</td></tr>
+<tr><td>ERR322</td><td>Validation Failed : A passenger who applied an optional service with online check-in(undo check-in) unavailability exists.</td></tr>
+<tr><td>ERR323</td><td>Validation Failed : Have already checked-in.</td></tr>
+<tr><td>ERR324</td><td>Validation Failed : Online check-in(undo check-in) is not possible.</td></tr>
+<tr><td>ERR325</td><td>Validation Failed : Online check-in cancellation is not possible in the procedure state of the passenger.</td></tr>
+<tr><td>ERR326</td><td>Validation Failed : Haven&#x27;t checked-in yet.</td></tr>
+<tr><td>ERR327</td><td>Validation Failed : A seat is assigned already.</td></tr>
+<tr><td>ERR328</td><td>Validation Failed : This passenger has advanced seat(emergency exit row).</td></tr>
+<tr><td>ERR329</td><td>Validation Failed : This passenger has advanced seat.</td></tr>
+<tr><td>ERR330</td><td>Validation Failed : Online check-in is not possible in the procedure state of the passenger.</td></tr>
+<tr><td>ERR331</td><td>Validation Failed : Passport number is essential for online check-in(undo check-in) of international flight.</td></tr>
+<tr><td>ERR332</td><td>Validation Failed : Nationality and date of birth is essential for online check-in.</td></tr>
+<tr><td>ERR333</td><td>Validation Failed : Passport information is essential for online check-in of international flight.</td></tr>
+<tr><td>ERR334</td><td>Validation Failed : Online check-in of the passenger type is not possible.</td></tr>
+<tr><td>ERR335</td><td>Validation Failed : <a href="complex-types.html#passenger">Passenger</a> accompanying an infant is not possible.</td></tr>
+<tr><td>ERR336</td><td>Validation Failed : Online check-in is available %s minutes before your flight’s scheduled departure time.</td></tr>
+<tr><td>ERR337</td><td>Validation Failed : We do not accept any online check-in cancellation within %s minutes from the scheduled departure time for flights.</td></tr>
+<tr><td>ERR338</td><td>Validation Failed : Haven&#x27;t seat designated yet.</td></tr>
+<tr><td>ERR339</td><td>Validation Failed : Seat designation in the itinerary is not allowed.</td></tr>
+<tr><td>ERR340</td><td>Validation Failed : Passport expiration date is essential for international flight.</td></tr>
+<tr><td>ERR341</td><td>Validation Failed : Online check-in(undo check-in) in the destination is not possible.</td></tr>
+<tr><td>ERR342</td><td>Validation Failed : A remaining period by the passport expiration date is not enough.</td></tr>
+<tr><td>ERR343</td><td>Validation Failed : Online Check-in(undo check-in) is not possible in the state of the flight.</td></tr>
+<tr><td>ERR344</td><td>Validation Failed : This passenger has checked baggage.</td></tr>
+<tr><td>ERR345</td><td>Validation Failed : Single trip itinerary is not possible.</td></tr>
+<tr><td>ERR346</td><td>Validation Failed : You haven&#x27;t taken your first itinerary.</td></tr>
+<tr><td>ERR347</td><td>Please bring the coupon to the counter and exchange it for a boarding pass.</td></tr>
+<tr><td>ERR348</td><td>You can apply designating a seat only(Issued as an exchange coupon).</td></tr>
+<tr><td>ERR349</td><td>Validation Failed : Invalid AGAmount.</td></tr>
+<tr><td>ERR350</td><td>Validation Failed : GuestInfo is mandatory</td></tr>
+<tr><td>ERR351</td><td>Validation Failed : Invalid SeatNumber</td></tr>
+<tr><td>ERR353</td><td>Validation Failed : <a href="complex-types.html#passenger">Passenger</a> capable of seat designation does not exist.</td></tr>
+<tr><td>ERR354</td><td>Validation failed : EmergencyContactNumber and EmergencyContactCountryCode must exists in pairs</td></tr>
+<tr><td>ERR355</td><td>Validation failed : Input passenger contact information.</td></tr>
+<tr><td>ERR356</td><td>Validation failed : SessionId is not used. Please remove <a href="complex-types.html#econauthinfo">ECONAuthInfo</a>.SessionId from request.</td></tr>
+<tr><td>ERR357</td><td>Validation failed : This row already has infants.</td></tr>
+<tr><td>ERR358</td><td>Validation failed : The number of available segments has been exceeded.(Avail Segments Count : %s)</td></tr>
+<tr><td>ERR359</td><td>Validation failed : Changing a reservation is not possible if the boarding date passed.</td></tr>
+<tr><td>ERR360</td><td>Validation failed : Please proceed after canceling online check-in.</td></tr>
+<tr><td>ERR361</td><td>Validation failed : The airport of departure in segment %d must be within the same region(continent) with the airport of arrival in segment %d. %s</td></tr>
+<tr><td>ERR362</td><td>Validation failed : The arrival airport of %d th segment and the departure airport of %d th segment should be the same area(continent). %s</td></tr>
+<tr><td>ERR363</td><td>Validation failed : <a href="complex-types.html#passenger">Passenger</a>s accompanies with infants can not select these seats(emergency exit row).</td></tr>
+<tr><td>ERR364</td><td>Validation failed : The departure and arrival airport of the selected multi-city journey is not operated airport by our company. %s</td></tr>
+<tr><td>ERR365</td><td>Validation failed : DepartureFlightDate is mandatory</td></tr>
+<tr><td>ERR366</td><td>Validation Failed : Expected PaxType is ADULT│CHILD</td></tr>
+<tr><td>ERR367</td><td>Validation Failed : PaxType is duplicate</td></tr>
+<tr><td>ERR368</td><td>Validation Failed : International and domestic routes can not be booked together for multi-segment itineraries.</td></tr>
+<tr><td>ERR369</td><td>Validation Failed : Purchasing optional service is not possible, if the boarding date of the reservation passed.</td></tr>
+<tr><td>ERR370</td><td>You made a booking through a travel agency and can&#x27;t purchase additional(add baggage and bundle) services if you transfer within 24 hours of your stopover. Please contact to checkin count in airport.</td></tr>
+<tr><td>ERR371</td><td>Validation Failed : All passengers must input their date of birth for the service to be accessible.</td></tr>
+<tr><td>ERR372</td><td><a href="complex-types.html#passenger">Passenger</a>s under the age of 15 are not allowed to select emergency exit seats.</td></tr>
+<tr><td>ERR373</td><td>The pertinent booking is not allowed to be cancelled.</td></tr>
+<tr><td>ERR374</td><td>The pertinent booking is not allowed to be changed.</td></tr>
+<tr><td>ERR375</td><td>Baggage service is unavailable for this route</td></tr>
+<tr><td>ERR376</td><td>Seat service is unavailable for this route</td></tr>
+<tr><td>ERR377</td><td>Meal service is unavailable for this route</td></tr>
+<tr><td>ERR378</td><td>Validation Failed : For international flights, the TravelDocumentCountryOfIssue is mandatory.</td></tr>
+<tr><td>ERR379</td><td>Validation Failed : <a href="complex-types.html#passenger">Passenger</a> {0} is over 13 years old from flihgt {1}. Please make booking as &#x27;Adult&#x27; from flight {2}.</td></tr>
+<tr><td>ERR380</td><td>Validation Failed : <a href="complex-types.html#passenger">Passenger</a> {0} is over 2 years old from flihgt {1}. Please make booking as &#x27;Child&#x27; from flight {2}.</td></tr>
+<tr><td>ERR381</td><td>According to the enforcement of the Information and Communications Network Act, article 17-2 (Demand for Consent from the Legal Guardian), booking for a child under 14 requires approval and consent from the legal guardian.</td></tr>
+<tr><td>ERR382</td><td>Validation failed : Invalid SegmentId Please set Number only.</td></tr>
+<tr><td>ERR383</td><td>Validation failed : Invalid segment ID order.</td></tr>
+<tr><td>ERR384</td><td>Validation failed : DestinationResidence(Country, AddressOne, City, ProvinceOrState, ZipCode) is mandatory for online check-in of U.S. territories.</td></tr>
+<tr><td>ERR385</td><td>Validation failed : Country for United States territories can only be USA.</td></tr>
+<tr><td>ERR386</td><td>This is a ticket that refund validity period has expired.</td></tr>
+<tr><td>ERR387</td><td>This is a refund ticket that has expired.</td></tr>
+<tr><td>ERR388</td><td>AGAmount can be used in CCAG│NPAG│SPAG│KPAG formOfPaymentCode.</td></tr>
+<tr><td>ERR389</td><td>Advance seat purchase is unavailable for this aircraft.</td></tr>
+<tr><td>ERR390</td><td>Validation failed : Seat assignment for other CabinClass is not possible.</td></tr>
+<tr><td>ERR391</td><td>Validation failed : The seat you are trying to assign does not exist.</td></tr>
+<tr><td>ERR392</td><td>Validation failed : Online check-in in the itinerary(Domestic/International) is not allowed.</td></tr>
+<tr><td>ERR393</td><td>Validation failed : This agency is not authorized to retrieve GROUP PNR.</td></tr>
+<tr><td>ERR400</td><td>Validation Failed : AncillaryAuthToken is mandatory (This Message displayed when the Request does not contain AncillaryAuthToken.)</td></tr>
+<tr><td>ERR401</td><td>The PnrNumber in the issued AncillaryAuthToken does not match the PnrNumber provided in the request. (This message displayed when the PnrNumber currently entered does not match the PnrNumber used during the issuance of the AncillaryAuthToken.)</td></tr>
+<tr><td>ERR402</td><td>No matching Guest information found for the provided GuestDetailsForAuth. (This message displayed when there is no information found for the provided GuestDetailsForAuth.)</td></tr>
+<tr><td>ERR403</td><td>Invalid AncillaryAuthToken. This AncillaryAuthToken is not eligible for use. (This message displayed  when the AncillaryAuthToken is either expired or invalid.)</td></tr>
+<tr><td>ERR404</td><td>Validation Failed : Incorrect AncillaryAuthToken. (This Message displayed when the AnchorageAuthToken format is incorrect.)</td></tr>
+<tr><td>ERR405</td><td>Validation Failed : GuestDetailsForAuth is mandatory (This Message displayed when the Request does not contain GuestDetailsForAuth.)</td></tr>
+<tr><td>ERR406</td><td>This AgencyCode is not eligible for the issuance of the AncillaryAuthToken. (This message displayed when if the AgencyCode is not a Ancillary Delegate Agency)</td></tr>
+<tr><td>ERR407</td><td>GuestId in <a href="complex-types.html#ssrinfotype">SsrInfoType</a> must exist in the GuestDetailsForAuth used during AncillaryAuthToken issuance. (This message displayed when the GuestId entered in the request&#x27;s SsrInfoType is not part of the Guest information provided in the GuestDetailsForAuth during the issuance of the AncillaryAuthToken.)</td></tr>
+<tr><td>ERR408</td><td>Validation failed: Invalid TicketNumber. Please enter a 13-digit number only. (This message displayed when TicketNumber is in an incorrect format.)</td></tr>
+<tr><td>ERR409</td><td>The AgencyCode in the issued AncillaryAuthToken does not match the AgencyCode provided in the request. (This message displayed when the AgencyCode currently entered does not match the AgencyCode used during the issuance of the AncillaryAuthToken.)</td></tr>
+<tr><td>ERR410</td><td>The GuestDetailsForAuth in the issued AncillaryAuthToken does not match the GuestDetailsForAuth provided in the request. (This message displayed when the GuestDetailsForAuth currently entered does not match the AgencyCode used during the issuance of the GuestDetailsForAuth.)</td></tr>
+<tr><td>ERR411</td><td>The service is unavailable for GROUP PNR cases.</td></tr>
+<tr><td>ERR412</td><td>Validation Failed : Additional passenger information verification is required. Please visit the airport counter for assistance.</td></tr>
+<tr><td>ERR413</td><td>Purchase a Business Premium seat. Changing the seat may cancel the purchased seat.</td></tr>
+<tr><td>ERR414</td><td>Validation failed: Mealgroupinfo is available for Business use only.</td></tr>
+<tr><td>ERR415</td><td>Validation failed: Mealinfo is available for Economy use only.</td></tr>
+<tr><td>ERR416</td><td>Validation failed: MealGroupInfo or <a href="complex-types.html#seatassignmentinfo">SeatAssignmentInfo</a> information is required.</td></tr>
+<tr><td>ERR417</td><td>The %s is not allowed to be changed.</td></tr>
+<tr><td>ERR418</td><td>Validation failed : According to %s transportation regulations, ticket reservations/issuance are restricted for travel between regions within the %s</td></tr>
+<tr><td>ERR419</td><td>Validation Failed : All segmentIds in a multi-segment itinerary must share the same flightSegmentGroupID</td></tr>
+<tr><td>ERR420</td><td>Validation Failed : fareComponentId does not match flightSegmentGroupID</td></tr>
+<tr><td>ERR421</td><td>Validation Failed : <a href="complex-types.html#fare">Fare</a>ComponentId does not match FlightSegmentGroupID&#x27;s SegmentId mapping</td></tr>
+<tr><td>ERR422</td><td>Validation Failed : Missing <a href="complex-types.html#fare">Fare</a>ComponentId matching FlightSegmentGroupID [ %s ]</td></tr>
+<tr><td>ERR423</td><td>Validation Failed : flightSegmentGroupID is required for multi-segment itinerary</td></tr>
+<tr><td>ERR424</td><td>Validation failed : This route does not allow SEAT purchase for CHILD. (%s - %s)</td></tr>
+<tr><td>ERR425</td><td>Validation failed : The zoneId of the departure city is invalid.</td></tr>
+<tr><td>ERR426</td><td>Validation failed : The selected itinerary is not available for booking at this time.</td></tr>
+<tr><td>ERR427</td><td>At least one PNR contact without a guestId is required for the home contact.</td></tr>
+<tr><td>ERR428</td><td>Validation Failed : Long distance flights are provided with Free meal.</td></tr>
+<tr><td>ERR600</td><td>Service Call Failure</td></tr>
+<tr><td>ERR601</td><td>Validation Failed : Invalid XML format</td></tr>
+<tr><td>ERR602</td><td>Mismatched AgencyCode in PNR</td></tr>
+<tr><td>ERR603</td><td>PNR Status is not Active</td></tr>
+<tr><td>ERR604</td><td>PNR is already Paid</td></tr>
+<tr><td>ERR605</td><td>Origin and Destination check failed</td></tr>
+<tr><td>ERR606</td><td>Decryption failed for Payment Data</td></tr>
+<tr><td>ERR607</td><td>SSR for %s is unavailable</td></tr>
+<tr><td>ERR608</td><td>%s for this request is not possible</td></tr>
+<tr><td>ERR609</td><td>Agent does not have privilege to do %s form of payment</td></tr>
+<tr><td>ERR610</td><td>PNR doesn&#x27;t have PnrContact for passenger.</td></tr>
+<tr><td>ERR611</td><td>Retunred data is empty.</td></tr>
+<tr><td>ERR612</td><td>Validation Failed : Invalid BarCode format.</td></tr>
+<tr><td>ERR613</td><td>Please retry <a href="book-service.html#method-retrievebooking">RetrieveBooking</a>. Payment is done. but we could not get the response now.</td></tr>
+<tr><td>ERR614</td><td>Validation Failed : Decrypted data is empty.(%s)</td></tr>
+<tr><td>ERR615</td><td>PNR is not Paid.</td></tr>
+<tr><td>ERR616</td><td>IFG paymentAuthorize failure.</td></tr>
+<tr><td>ERR617</td><td>kakaopay service call failure.</td></tr>
+<tr><td>ERR618</td><td>PNR has already been canceled.</td></tr>
+<tr><td>ERR619</td><td>Request data is empty.</td></tr>
+<tr><td>ERR620</td><td>naverpay service call failure.</td></tr>
+<tr><td>ERR621</td><td>smilepay service call failure.</td></tr>
+<tr><td>ERR622</td><td>Failed to get telegramSeq.</td></tr>
+<tr><td>ERR623</td><td>Checkin Service Call failure.</td></tr>
+<tr><td>ERR624</td><td>System maintenance is in progress. Please try again later.</td></tr>
+<tr><td>ERR625</td><td>Not allowed IP address</td></tr>
+<tr><td>ERR626</td><td>Too Many Requests. Transaction count over.</td></tr>
+<tr><td>ERR627</td><td>The IP has expired and cannot be used, please contact our sales team.</td></tr>
+<tr><td>ERR628</td><td>Credit Card Payment Failure</td></tr>
+<tr><td>ERR629</td><td>BadCredentialsException</td></tr>
+<tr><td>ERR630</td><td>AccessDenied</td></tr>
+<tr><td>ERR631</td><td>This service is not available.(Deprecated Service)</td></tr>
+</table>
+
+
+<h2 id="appendix-2--encrypt-seed">Appendix 2 – <a href="appendix.html#appendix-2-encrypt-seed">Encrypt Seed</a></h2>
+
+<p><strong>- C# </strong><strong>language</strong></p>
+
+<p>Use TwayAir.Common.BookingAPI.Seed.dll (.NET Framework 4.0)</p>
+
+<li>Sample code</li>
+
+<table>
+<tr><th><a href="complex-types.html#bundleinfoforseg">String</a> strTest = &quot;encryptTest&quot;; String strEncrypt = &quot;&quot;; String strDecrypt = &quot;&quot;; strEncrypt = TwayAir.Common.BookingAPI.Seed.SeedUtil.Encrypt(strTest); strDecrypt = TwayAir.Common.BookingAPI.Seed.SeedUtil.Decrypt(strEncrypt);</th></tr>
+</table>
+
+
+<p><strong>- </strong><strong>J</strong><strong>ava</strong><strong> langauge</strong></p>
+
+<p>Use TwaySeed.jar (java 1.5 version)</p>
+
+<li>Sample code</li>
+
+<table>
+<tr><th>import com.twayair.security.seed.*; SeedUtil.encoding(<a href="complex-types.html#bundleinfoforseg">String</a> text); SeedUtil.decoding(String text);</th></tr>
+</table>
+
+
+<h2 id="appendix-3--required-input-value-for-issued-korea-card-on-easypaykicc">Appendix 3 – <a href="appendix.html#appendix-3">Required input value for issued korea card on EasyPay(KICC)</a></h2>
+
+<table>
+<tr><th><strong>Field (PC)</strong></th><th><strong>Field (MOBILE)</strong></th><th><strong>description</strong></th><th><strong>Value</strong></th></tr>
+<tr><td>EP_mall_id</td><td>sp_mall_id</td><td>가맹점 아이디</td><td>TEST : T0010632 운영 : 05515794</td></tr>
+<tr><td>EP_mall_nm</td><td>sp_mall_nm</td><td>가맹점명</td><td>T&#x27;way Air</td></tr>
+<tr><td>EP_pay_type</td><td>sp_pay_type</td><td>결제수단(신용카드)</td><td>11</td></tr>
+<tr><td>EP_currency</td><td>sp_currency</td><td>통화코드(원화)</td><td>00</td></tr>
+<tr><td>EP_order_no</td><td>sp_order_no</td><td>주문번호(현재시간)</td><td>Ex) 201407061405570375479</td></tr>
+<tr><td>EP_user_type</td><td>sp_user_type</td><td>사용자구분(일반)</td><td>1</td></tr>
+<tr><td>EP_user_id</td><td>sp_user_id</td><td>고객 ID(agencycode 사용)</td><td>Ex) 60200090</td></tr>
+<tr><td>EP_user_nm</td><td>sp_user_nm</td><td>고객명</td><td>Ex) 홍길동</td></tr>
+<tr><td>EP_user_mail</td><td>sp_user_mail</td><td>고객E-mail</td><td>Ex) [<a href="mailto:hong@twayair.com" target="_blank">hong@twayair.com</a>](mailto:hong@twayair.com)</td></tr>
+<tr><td>EP_user_phone2</td><td>sp_user_phone2</td><td>휴대폰번호</td><td>Ex) 01012345678</td></tr>
+<tr><td>EP_product_nm</td><td>sp_product_nm</td><td>상품명</td><td>티웨이항공 항공권</td></tr>
+<tr><td>EV_kvp_pgid</td><td>sp_vp_pgid</td><td>KVP PGID</td><td>TWAY1 (ISP 인증시 필수 정보)</td></tr>
+<tr><td>EP_product_amt</td><td>sp_product_amt</td><td>상품금액</td><td>Ex) 100000</td></tr>
+<tr><td>EP_quota</td><td>sp_quota</td><td>할부개월수</td><td>Ex) 02</td></tr>
+</table>
+
+
+<h2 id="appendix-4--required-input-value-for-naverpay"><a href="appendix.html#appendix-4">Appendix 4</a> – Required input value for Naverpay</h2>
+
+<p>네이버페이 간편 결제 [<a href="https://developer.pay.naver.com/docs/v2/api" target="_blank">https://developer.pay.naver.com/docs/v2/api#payments-payments_window</a>](https://developer.pay.naver.com/docs/v2/api)</p>
+
+<p>네이버페이 반복 결제 [<a href="https://developer.pay.naver.com/docs/v2/api" target="_blank">https://developer.pay.naver.com/docs/v2/api#recurrent-recurrent_summary</a>](https://developer.pay.naver.com/docs/v2/api)</p>
+
+<table>
+<tr><th><strong>F</strong><strong>ield Name</strong></th><th><strong>D</strong><strong>escription</strong></th><th><strong>Value</strong></th></tr>
+<tr><td>파트너 ID</td><td>twayair</td></tr>
+<tr><td>data-client-id (clientId)</td><td>가맹점 식별키</td><td>PO6xGAubEy77cM7uNQyp</td></tr>
+<tr><td>data-client-secret (clientSecret)</td><td>연동시 항공사 문의</td></tr>
+<tr><td>data-chain-id (chainId)</td><td>가맹점 그룹별 식별키 (연동시 항공사 문의)</td></tr>
+</table>
+
+
+<p>Pay Reserve Parameters</p>
+
+<table>
+<tr><th><strong>Field Name</strong></th><th><strong>Description</strong></th><th><strong>Value</strong></th></tr>
+<tr><td>data-merchant-pay-key (merchantPayKey)</td><td>주문 내역 확인이 가능한 가맹점 결제번호 또는 주문번호 yyyyMMddHHmmss-PNR-AgencyCode</td><td>ex) 20201106164128-FCVQ26-60200040</td></tr>
+<tr><td>data-product-name (productName)</td><td>대표 상품명 국내선 항공권│국제선 항공권│국내선 항공권 여정변경│국제선 항공권 여정변경│국내선 부가서비스 번들│국제선 부가서비스 번들│국내선 기내식│국제선 기내식│국내선 초과수하물│국제선 초과수하물│국내선 사전좌석지정│국제선 사전좌석지정</td><td>ex) 국내선 항공권</td></tr>
+<tr><td>data-product-count (productCount)</td><td>상품 수량</td><td>1</td></tr>
+<tr><td>data-total-pay-amount (totalPayAmount)</td><td>총 결제 금액, 최소 결제금액은 100원</td><td>ex) 100000</td></tr>
+<tr><td>data-tax-scope-amount (taxScopeAmount)</td><td>과세 대상 금액 (총 결제 금액과 동일)</td><td>ex) 100000</td></tr>
+<tr><td>data-tax-ex-scope-amount (taxExScopeAmount)</td><td>면세 대상 금액 (없음)</td><td>0</td></tr>
+<tr><td>data-use-cfmymdt (useCfmYmdt)</td><td>이용완료일(yyyymmdd) 항공권 탑승 완료일 ProductItem &gt; endDate와 동일</td><td>ex) 20210325</td></tr>
+</table>
+
+
+<p>ProductItem</p>
+
+<table>
+<tr><th><strong>Field Name</strong></th><th><strong>Description</strong></th><th><strong>Value</strong></th></tr>
+<tr><td>categoryType</td><td>결제 상품 유형, “FLIGHT” 고정값</td><td>FLIGHT</td></tr>
+<tr><td>categoryId</td><td>결제 상품 유형, “TICKET” 고정값</td><td>TICKET</td></tr>
+<tr><td>uid</td><td>결제 상품 유형, 첫번째 여정의 편명</td><td>ex) TW706</td></tr>
+<tr><td>name</td><td>상품명 Pay Reserve Parameter &gt; productName과 동일 국내선 항공권│국제선 항공권│국내선 항공권 여정변경│국제선 항공권 여정변경│국내선 부가서비스 번들│국제선 부가서비스 번들│국내선 기내식│국제선 기내식│국내선 초과수하물│국제선 초과수하물│국내선 사전좌석지정│국제선 사전좌석지정</td><td>ex) 국내선 항공권</td></tr>
+<tr><td>startDate</td><td>항공권 탑승 시작일(yyyyMMdd)</td><td>ex) 20210322</td></tr>
+<tr><td>endDate</td><td>항공권 탑승 종료일(yyyyMMdd) 편도인 경우 시작일과 종료일 동일</td><td>ex) 20210325</td></tr>
+<tr><td>count</td><td>결제 상품 개수</td><td>1</td></tr>
+</table>
+
+
+<h2 id="appendix-5--connection-flight">Appendix 5 – <a href="appendix.html#appendix-5-connection-flight">Connection Flight</a></h2>
+
+<p>We have provide route information to sell using <a href="shop-service.html#method-retrieveroute">RetrieveRoute</a> or <a href="shop-service.html#method-retrievessim">RetrieveSsim</a> service.</p>
+
+<p>Sample for connection flight booking flow.</p>
+
+<p>1. <a href="shop-service.html#method-airavailability">AirAvailability</a> Service</p>
+
+<p>1) <a href="shop-service.html#method-airavailability">AirAvailability</a>RS</p>
+
+<p>TripInfo object have two <a href="complex-types.html#segmentinfo">SegmentInfo</a> object.</p>
+
+<p>Ex) FUK-BKK route</p>
+
+<div class="sample-section"><div class="xml-block" id="xmlblk1">
+  <div class="xml-toolbar">
+    
+    <button class="copy-btn" onclick="copyXml('xmlblk1')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <pre class="xml-pre"><code class="xml-code" data-raw="&lt;TripInfo TripIndex=&quot;1&quot; Route=&quot;FUK-ICN/-BKK&quot;&gt;
+  &lt;SegmentInfo SegmentIndex=&quot;1&quot; Stops=&quot;0&quot; Status=&quot;OPEN&quot; DayChange=&quot;0&quot; JourneyTime=&quot;05:15&quot; ···&gt;
+    &lt;FlightIdentifierInfo CarrierCode=&quot;TW&quot; FlightNumber=&quot;292&quot; FlightDate=&quot;2019-11-18Z&quot; ··· /&gt;
+    &lt;DepartureInfo AirportCode=&quot;FUK&quot; DateTime=&quot;2019-11-11T12:25:00Z&quot; ··· /&gt;
+    &lt;ArrivalInfo AirportCode=&quot;ICN&quot; DateTime=&quot;2019-11-11T13:45:00Z&quot; ···/&gt;
+  &lt;/SegmentInfo&gt;
+  &lt;SegmentInfo SegmentIndex=&quot;2&quot; Stops=&quot;0&quot; Status=&quot;OPEN&quot; DayChange=&quot;0&quot; JourneyTime=&quot;01:35&quot; ···&gt;
+    &lt;FlightIdentifierInfo CarrierCode=&quot;TW&quot; FlightNumber=&quot;293&quot; FlightDate=&quot;2019-11-18Z&quot; ··· /&gt;
+    &lt;DepartureInfo AirportCode=&quot;ICN&quot; DateTime=&quot;2019-11-11T20:25:00Z&quot; ··· /&gt;
+    &lt;ArrivalInfo AirportCode=&quot;BKK&quot; DateTime=&quot;2019-11-11T00:10:00Z&quot; ···/&gt;
+  &lt;/SegmentInfo&gt;
+&lt;/TripInfo&gt;"><span class="xb">&lt;</span><span class="xt">TripInfo</span> TripIndex<span class="xa">=&quot;</span><span class="xv">1</span><span class="xa">&quot;</span> Route<span class="xa">=&quot;</span><span class="xv">FUK-ICN/-BKK</span><span class="xa">&quot;</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentInfo</span> SegmentIndex<span class="xa">=&quot;</span><span class="xv">1</span><span class="xa">&quot;</span> Stops<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> Status<span class="xa">=&quot;</span><span class="xv">OPEN</span><span class="xa">&quot;</span> DayChange<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> JourneyTime<span class="xa">=&quot;</span><span class="xv">05:15</span><span class="xa">&quot;</span> ···<span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">FlightIdentifierInfo</span> CarrierCode<span class="xa">=&quot;</span><span class="xv">TW</span><span class="xa">&quot;</span> FlightNumber<span class="xa">=&quot;</span><span class="xv">292</span><span class="xa">&quot;</span> FlightDate<span class="xa">=&quot;</span><span class="xv">2019-11-18Z</span><span class="xa">&quot;</span> ··· <span class="xb">/&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">DepartureInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">FUK</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2019-11-11T12:25:00Z</span><span class="xa">&quot;</span> ··· <span class="xb">/&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">ArrivalInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">ICN</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2019-11-11T13:45:00Z</span><span class="xa">&quot;</span> ···<span class="xb">/&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">SegmentInfo</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentInfo</span> SegmentIndex<span class="xa">=&quot;</span><span class="xv">2</span><span class="xa">&quot;</span> Stops<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> Status<span class="xa">=&quot;</span><span class="xv">OPEN</span><span class="xa">&quot;</span> DayChange<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> JourneyTime<span class="xa">=&quot;</span><span class="xv">01:35</span><span class="xa">&quot;</span> ···<span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">FlightIdentifierInfo</span> CarrierCode<span class="xa">=&quot;</span><span class="xv">TW</span><span class="xa">&quot;</span> FlightNumber<span class="xa">=&quot;</span><span class="xv">293</span><span class="xa">&quot;</span> FlightDate<span class="xa">=&quot;</span><span class="xv">2019-11-18Z</span><span class="xa">&quot;</span> ··· <span class="xb">/&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">DepartureInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">ICN</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2019-11-11T20:25:00Z</span><span class="xa">&quot;</span> ··· <span class="xb">/&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">ArrivalInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">BKK</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2019-11-11T00:10:00Z</span><span class="xa">&quot;</span> ···<span class="xb">/&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">SegmentInfo</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">TripInfo</span><span class="xb">&gt;</span></code></pre>
+</div></div>
+
+<p>2. <a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>, <a href="book-service.html#method-markseats"><a href="book-service.html#method-markseats">MarkSeat</a>s</a>, <a href="book-service.html#method-createbooking">CreateBooking</a></p>
+
+<p>If TripInfo have two SegementInfo,</p>
+
+<p>1) you need to set all segment information in the request and grouping with FlightSegmentGroupID.</p>
+
+<p>2) you need to set all segmentId in <a href="complex-types.html#fare">Fare</a>InfoGuestType and grouping with FareComponentId.</p>
+
+<p>Ex) FUK-BKK</p>
+
+<p><a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>RQ</p>
+
+<div class="sample-section"><div class="xml-block" id="xmlblk2">
+  <div class="xml-toolbar">
+    
+    <button class="copy-btn" onclick="copyXml('xmlblk2')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <pre class="xml-pre"><code class="xml-code" data-raw="&lt;FlightSegmentInfo&gt;
+  &lt;FlightSegmentGroupID&gt;1
+  &lt;/FlightSegmentGroupID&gt;
+  &lt;SegmentId&gt;1
+  &lt;/SegmentId&gt;
+  &lt;carrierCode&gt;TW
+  &lt;/carrierCode&gt;
+  &lt;fltNumber&gt;292
+  &lt;/fltNumber&gt;
+  &lt;flightDate&gt;
+    &lt;Date&gt;2019-11-18
+    &lt;/Date&gt;
+  &lt;/flightDate&gt;
+  &lt;boardPoint&gt;FUK
+  &lt;/boardPoint&gt;
+  &lt;offPoint&gt;ICN
+  &lt;/offPoint&gt;
+  &lt;FareClass&gt;Y
+  &lt;/FareClass&gt;
+  &lt;stops&gt;0
+  &lt;/stops&gt;
+&lt;/FlightSegmentInfo&gt;
+&lt;FlightSegmentInfo&gt;
+  &lt;FlightSegmentGroupID&gt;1
+  &lt;/FlightSegmentGroupID&gt;
+  &lt;SegmentId&gt;2
+  &lt;/SegmentId&gt;
+  &lt;carrierCode&gt;TW
+  &lt;/carrierCode&gt;
+  &lt;fltNumber&gt;101
+  &lt;/fltNumber&gt;
+  &lt;flightDate&gt;
+    &lt;Date&gt;2019-11-18
+    &lt;/Date&gt;
+  &lt;/flightDate&gt;
+  &lt;boardPoint&gt;ICN
+  &lt;/boardPoint&gt;
+  &lt;offPoint&gt;BKK
+  &lt;/offPoint&gt;
+  &lt;FareClass&gt;Y
+  &lt;/FareClass&gt;
+  &lt;stops&gt;0
+  &lt;/stops&gt;
+&lt;/FlightSegmentInfo&gt;
+&lt;FareInfoForGuestType&gt;
+  &lt;FareType&gt;NormalFare
+  &lt;/FareType&gt;
+  &lt;FareBasisCode&gt;YXXX
+  &lt;/FareBasisCode&gt;
+  &lt;FareClass&gt;Y
+  &lt;/FareClass&gt;
+  &lt;GuestType&gt;ADULT
+  &lt;/GuestType&gt;
+  &lt;BaseFare&gt;50000.0
+  &lt;/BaseFare&gt;
+  &lt;Currency&gt;JPY
+  &lt;/Currency&gt;
+  &lt;FareTransactionID&gt;319813
+  &lt;/FareTransactionID&gt;
+  &lt;SegmentId&gt;1
+  &lt;/SegmentId&gt;
+  &lt;SegmentId&gt;2
+  &lt;/SegmentId&gt;
+  &lt;FareComponentId&gt;1
+  &lt;/FareComponentId&gt;
+&lt;/FareInfoForGuestType&gt;"><span class="xb">&lt;</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>TW
+  <span class="xb">&lt;/</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>292
+  <span class="xb">&lt;/</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">Date</span><span class="xb">&gt;</span>2019-11-18
+    <span class="xb">&lt;/</span><span class="xt">Date</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>FUK
+  <span class="xb">&lt;/</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">offPoint</span><span class="xb">&gt;</span>ICN
+  <span class="xb">&lt;/</span><span class="xt">offPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>Y
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">stops</span><span class="xb">&gt;</span>0
+  <span class="xb">&lt;/</span><span class="xt">stops</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+<span class="xb">&lt;</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>2
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>TW
+  <span class="xb">&lt;/</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>101
+  <span class="xb">&lt;/</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">Date</span><span class="xb">&gt;</span>2019-11-18
+    <span class="xb">&lt;/</span><span class="xt">Date</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>ICN
+  <span class="xb">&lt;/</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">offPoint</span><span class="xb">&gt;</span>BKK
+  <span class="xb">&lt;/</span><span class="xt">offPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>Y
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">stops</span><span class="xb">&gt;</span>0
+  <span class="xb">&lt;/</span><span class="xt">stops</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+<span class="xb">&lt;</span><span class="xt">FareInfoForGuestType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareType</span><span class="xb">&gt;</span>NormalFare
+  <span class="xb">&lt;/</span><span class="xt">FareType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareBasisCode</span><span class="xb">&gt;</span>YXXX
+  <span class="xb">&lt;/</span><span class="xt">FareBasisCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>Y
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">GuestType</span><span class="xb">&gt;</span>ADULT
+  <span class="xb">&lt;/</span><span class="xt">GuestType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">BaseFare</span><span class="xb">&gt;</span>50000.0
+  <span class="xb">&lt;/</span><span class="xt">BaseFare</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">Currency</span><span class="xb">&gt;</span>JPY
+  <span class="xb">&lt;/</span><span class="xt">Currency</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareTransactionID</span><span class="xb">&gt;</span>319813
+  <span class="xb">&lt;/</span><span class="xt">FareTransactionID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>2
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareComponentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FareComponentId</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FareInfoForGuestType</span><span class="xb">&gt;</span></code></pre>
+</div></div>
+
+<p>If TripInfo has two <a href="complex-types.html#segmentinfo">SegmentInfo</a>, and each has two <a href="complex-types.html#fare">Fare</a>Classes.</p>
+
+<p>1) you need to set all segment information in the request and grouping with FlightSegmentGroupID.</p>
+
+<p>2) you need to set all segmentId in <a href="complex-types.html#fare">Fare</a>InfoGuestType and grouping with FareComponentId.</p>
+
+<p>Ex) TPE - KWJ</p>
+
+<p><a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a>RQ</p>
+
+<div class="sample-section"><div class="xml-block" id="xmlblk3">
+  <div class="xml-toolbar">
+    
+    <button class="copy-btn" onclick="copyXml('xmlblk3')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <pre class="xml-pre"><code class="xml-code" data-raw="&lt;FlightSegmentInfo&gt;
+  &lt;FlightSegmentGroupID&gt;1
+  &lt;/FlightSegmentGroupID&gt;
+  &lt;SegmentId&gt;1
+  &lt;/SegmentId&gt;
+  &lt;carrierCode&gt;TW
+  &lt;/carrierCode&gt;
+  &lt;fltNumber&gt;688
+  &lt;/fltNumber&gt;
+  &lt;flightDate&gt;
+    &lt;Date&gt;2024-11-12
+    &lt;/Date&gt;
+  &lt;/flightDate&gt;
+  &lt;boardPoint&gt;TPE
+  &lt;/boardPoint&gt;
+  &lt;offPoint&gt;CJU
+  &lt;/offPoint&gt;
+  &lt;CabinClass&gt;ECONOMY
+  &lt;/CabinClass&gt;
+  &lt;FareClass&gt;S
+  &lt;/FareClass&gt;
+  &lt;stops&gt;0
+  &lt;/stops&gt;
+&lt;/FlightSegmentInfo&gt;
+&lt;FlightSegmentInfo&gt;
+  &lt;FlightSegmentGroupID&gt;1
+  &lt;/FlightSegmentGroupID&gt;
+  &lt;SegmentId&gt;2
+  &lt;/SegmentId&gt;
+  &lt;carrierCode&gt;TW
+  &lt;/carrierCode&gt;
+  &lt;fltNumber&gt;902
+  &lt;/fltNumber&gt;
+  &lt;flightDate&gt;
+    &lt;Date&gt;2024-11-13
+    &lt;/Date&gt;
+  &lt;/flightDate&gt;
+  &lt;boardPoint&gt;CJU
+  &lt;/boardPoint&gt;
+  &lt;offPoint&gt;KWJ
+  &lt;/offPoint&gt;
+  &lt;CabinClass&gt;ECONOMY
+  &lt;/CabinClass&gt;
+  &lt;FareClass&gt;P
+  &lt;/FareClass&gt;
+  &lt;stops&gt;0
+  &lt;/stops&gt;
+&lt;/FlightSegmentInfo&gt;
+&lt;FareInfoForGuestType&gt;
+  &lt;FareType&gt;SmartFare
+  &lt;/FareType&gt;
+  &lt;FareBasisCode&gt;STU
+  &lt;/FareBasisCode&gt;
+  &lt;FareClass&gt;S
+  &lt;/FareClass&gt;
+  &lt;GuestType&gt;ADULT
+  &lt;/GuestType&gt;
+  &lt;BaseFare&gt;5570.0
+  &lt;/BaseFare&gt;
+  &lt;Currency&gt;TWD
+  &lt;/Currency&gt;
+  &lt;FareTransactionID&gt;532359
+  &lt;/FareTransactionID&gt;
+  &lt;SegmentId&gt;1
+  &lt;/SegmentId&gt;
+  &lt;SegmentId&gt;2
+  &lt;/SegmentId&gt;
+  &lt;FareComponentId&gt;1
+  &lt;/FareComponentId&gt;
+&lt;/FareInfoForGuestType&gt;"><span class="xb">&lt;</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>TW
+  <span class="xb">&lt;/</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>688
+  <span class="xb">&lt;/</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">Date</span><span class="xb">&gt;</span>2024-11-12
+    <span class="xb">&lt;/</span><span class="xt">Date</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>TPE
+  <span class="xb">&lt;/</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">offPoint</span><span class="xb">&gt;</span>CJU
+  <span class="xb">&lt;/</span><span class="xt">offPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">CabinClass</span><span class="xb">&gt;</span>ECONOMY
+  <span class="xb">&lt;/</span><span class="xt">CabinClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>S
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">stops</span><span class="xb">&gt;</span>0
+  <span class="xb">&lt;/</span><span class="xt">stops</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+<span class="xb">&lt;</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FlightSegmentGroupID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>2
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>TW
+  <span class="xb">&lt;/</span><span class="xt">carrierCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>902
+  <span class="xb">&lt;/</span><span class="xt">fltNumber</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">Date</span><span class="xb">&gt;</span>2024-11-13
+    <span class="xb">&lt;/</span><span class="xt">Date</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;/</span><span class="xt">flightDate</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>CJU
+  <span class="xb">&lt;/</span><span class="xt">boardPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">offPoint</span><span class="xb">&gt;</span>KWJ
+  <span class="xb">&lt;/</span><span class="xt">offPoint</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">CabinClass</span><span class="xb">&gt;</span>ECONOMY
+  <span class="xb">&lt;/</span><span class="xt">CabinClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>P
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">stops</span><span class="xb">&gt;</span>0
+  <span class="xb">&lt;/</span><span class="xt">stops</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FlightSegmentInfo</span><span class="xb">&gt;</span>
+<span class="xb">&lt;</span><span class="xt">FareInfoForGuestType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareType</span><span class="xb">&gt;</span>SmartFare
+  <span class="xb">&lt;/</span><span class="xt">FareType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareBasisCode</span><span class="xb">&gt;</span>STU
+  <span class="xb">&lt;/</span><span class="xt">FareBasisCode</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareClass</span><span class="xb">&gt;</span>S
+  <span class="xb">&lt;/</span><span class="xt">FareClass</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">GuestType</span><span class="xb">&gt;</span>ADULT
+  <span class="xb">&lt;/</span><span class="xt">GuestType</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">BaseFare</span><span class="xb">&gt;</span>5570.0
+  <span class="xb">&lt;/</span><span class="xt">BaseFare</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">Currency</span><span class="xb">&gt;</span>TWD
+  <span class="xb">&lt;/</span><span class="xt">Currency</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareTransactionID</span><span class="xb">&gt;</span>532359
+  <span class="xb">&lt;/</span><span class="xt">FareTransactionID</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>2
+  <span class="xb">&lt;/</span><span class="xt">SegmentId</span><span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">FareComponentId</span><span class="xb">&gt;</span>1
+  <span class="xb">&lt;/</span><span class="xt">FareComponentId</span><span class="xb">&gt;</span>
+<span class="xb">&lt;/</span><span class="xt">FareInfoForGuestType</span><span class="xb">&gt;</span></code></pre>
+</div></div>
+
+<table>
+<tr><th>597</th></tr>
+</table>
+
+
+<table>
+<tr><th>2</th></tr>
+</table>
+
+  </div>
+</main>
+<script>
+function copyXml(blockId) {
+  const block = document.getElementById(blockId);
+  const code = block.querySelector('.xml-code');
+  const raw = code.dataset.raw || code.textContent;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = block.querySelector('.copy-btn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 18 4 13"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = raw; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn = block.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2v1"/></svg> Copy'; }, 2000);
+  });
+}
+</script>
+<script>
+const page=location.pathname.split('/').pop().replace('.html','')||'overview';
+document.querySelectorAll('.nav-link').forEach(a=>{if(a.dataset.page===page)a.classList.add('active');});
+</script>
+</body>
+</html>

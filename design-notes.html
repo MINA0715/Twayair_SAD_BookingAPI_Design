@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Design Notes — T'wayair Booking API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4f1;--surface:#ffffff;--surface2:#f0ece8;--border:#ddd8d2;
+  --accent:#6b6158;--accent2:#8e7d70;--accent-lt:#a69488;
+  --text:#1a1614;--text-muted:#5a504a;--text-dim:#9e948e;
+  --green:#4a7c59;--orange:#b85c2a;--red:#b83232;--link:#5a4a3a;
+  --nav-w:260px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  /* XML syntax colors – dark panel on light bg */
+  --xml-bg:#141210;--xml-border:#3a322c;
+  --xt:#7ecfb3;   /* tag name */
+  --xb:#a69070;   /* bracket / slash */
+  --xa:#c0a880;   /* attr name = " */
+  --xv:#e8c88a;   /* attr value */
+  --xpi:#888;     /* processing instruction */
+  --xtext:#ede8e3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.7}
+nav{width:var(--nav-w);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;display:flex;flex-direction:column;overflow-y:auto;box-shadow:2px 0 8px rgba(107,97,88,.08)}
+.nav-brand{padding:20px 16px 16px;border-bottom:1px solid var(--border);background:var(--accent)}
+.nav-brand .logo{font-family:var(--mono);font-size:11px;color:#fff;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.nav-brand .ver{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);margin-top:3px}
+.nav-section{padding:8px 0}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:10px 16px 4px}
+.nav-link{display:flex;align-items:center;gap:8px;padding:7px 16px;color:var(--text-muted);text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(107,97,88,.07);font-weight:600}
+main{margin-left:var(--nav-w);flex:1;min-width:0}
+.topbar{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 32px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(107,97,88,.1)}
+.topbar-icon{font-size:18px}
+.topbar-title{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.02em}
+.topbar-badge{margin-left:auto;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px}
+.content{padding:32px 40px;max-width:980px}
+h1{font-size:24px;font-weight:700;color:var(--text);margin:28px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+h1:first-child{margin-top:0}
+h2{font-size:17px;font-weight:700;color:var(--accent);margin:26px 0 10px;font-family:var(--mono);padding-left:10px;border-left:3px solid var(--accent)}
+h3{font-size:14px;font-weight:700;color:var(--green);margin:18px 0 8px;font-family:var(--mono)}
+h4{font-size:12px;font-weight:700;color:var(--orange);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+p{margin-bottom:10px;color:var(--text)}
+li{margin-left:20px;margin-bottom:4px;color:var(--text)}
+a{color:var(--link);text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:2px;transition:color .12s}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+strong{color:var(--text);font-weight:700}
+code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--orange);border:1px solid var(--border)}
+pre:not(.xml-pre){background:#1e1a17;border:1px solid var(--border);border-radius:6px;padding:16px;overflow-x:auto;margin:12px 0}
+pre:not(.xml-pre) code{background:none;padding:0;font-size:12px;color:#d4ccc5;white-space:pre;border:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border:1px solid var(--accent2);text-align:left}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--text);vertical-align:top}
+tr:nth-child(even) td{background:rgba(107,97,88,.04)}
+tr:hover td{background:rgba(107,97,88,.08)}
+
+/* ── XML blocks ── */
+.xml-block{margin:12px 0;border:1px solid var(--xml-border);border-radius:7px;overflow:hidden;background:var(--xml-bg)}
+.xml-toolbar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--xml-border)}
+.xml-label{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent-lt);letter-spacing:.06em;text-transform:uppercase}
+.copy-btn{display:flex;align-items:center;gap:5px;background:rgba(107,97,88,.25);color:#c8b8a8;border:1px solid rgba(107,97,88,.4);border-radius:4px;padding:3px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:rgba(107,97,88,.5);color:#fff}
+.copy-btn.copied{background:rgba(74,124,89,.3);color:#7ecfb3;border-color:rgba(74,124,89,.5)}
+.xml-pre{margin:0;padding:16px;overflow-x:auto;background:transparent;border:none;border-radius:0}
+.xml-code{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#ede8e3;white-space:pre}
+.xml-code .xt{color:#60d9a8}
+.xml-code .xb{color:#d4a85a}
+.xml-code .xa{color:#d4b896}
+.xml-code .xv{color:#f5d97a}
+.xml-code .xpi{color:#a8a8a8}
+/* sample section wrapper */
+.sample-section{margin:16px 0}
+.sample-section-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding:6px 12px;background:var(--surface2);border-radius:4px;border-left:3px solid var(--accent)}
+
+.menu-toggle{display:none;position:fixed;top:12px;left:12px;z-index:100;background:var(--accent);border:none;color:#fff;padding:7px 11px;border-radius:6px;cursor:pointer;font-size:16px}
+@media(max-width:768px){
+  .menu-toggle{display:block}
+  nav{transform:translateX(-100%);transition:transform .2s;z-index:50}
+  nav.open{transform:translateX(0)}
+  main{margin-left:0}
+  .content{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="document.querySelector('nav').classList.toggle('open')">☰</button>
+<nav>
+  <div class="nav-brand">
+    <div class="logo">T'wayair Booking API</div>
+    <div class="ver">Design Notes v4.0.6.8</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Documentation</div>
+    <a href="overview.html" class="nav-link" data-page="overview">🏠 Table of Contents</a><a href="history.html" class="nav-link" data-page="history">📋 History</a><a href="design-notes.html" class="nav-link" data-page="design-notes">📐 Design Notes</a><a href="shop-service.html" class="nav-link" data-page="shop-service">🛒 ShopService</a><a href="book-service.html" class="nav-link" data-page="book-service">📗 BookService</a><a href="postbook-service.html" class="nav-link" data-page="postbook-service">📮 PostBookService</a><a href="checkin-service.html" class="nav-link" data-page="checkin-service">✅ CheckinService</a><a href="complex-types.html" class="nav-link" data-page="complex-types">🔷 Complex Types</a><a href="simple-types.html" class="nav-link" data-page="simple-types">🔹 Simple Types</a><a href="appendix.html" class="nav-link" data-page="appendix">📎 Appendix</a>
+  </div>
+</nav>
+<main>
+  <div class="topbar">
+    <span class="topbar-icon">📐</span>
+    <span class="topbar-title">Design Notes</span>
+    <span class="topbar-badge">v4.0.6.8</span>
+  </div>
+  <div class="content">
+    
+<p>t’wayair Booking Application Programming Interface (Booking API) enables third-party applications to request information (such as availability, flight information, fare details) and create or modify reservations in the t’wayair sysetm.</p>
+
+<p>t’wayair Booking API will be exposed as a Web Service and will be using XML/HTTP(S). The definition of the services will be available to the third-party applications using HTTP(S).</p>
+
+<p>Component Diagram</p>
+
+<p><strong>C</strong><strong>lient Tier</strong></p>
+
+<p>The client tier consists of the OTAs that will use the t’wayair Booking API system to process their requests. The interactions are through XML/HTTP(S). The OTAs will be using a customized XML Request Response structure to interact with the t’wayair Booking API system.</p>
+
+<p><strong>Application Tier</strong></p>
+
+<p>The application tier will process the client OTAs requests using Spring container in a Java EE application server. The application processing involves activities like business module processing, Database access etc. The application tier is divided based on their functional responsibilities into five layers namely Services Layer, Business Layer, Data Layer, XSLT Layer and Core Layer. The core layer concentrates on having functionalities like Caching, and Logging which is used in any of the three layers mentioned.</p>
+
+<p><strong>External Tier</strong></p>
+
+<p>The external tier consists of the database, CRS system and the t’wayair Payment Gateway system. The databases are used to store referential data, route specific and agency code details. The CRS system provides APIs for Shopping and booking solutions using their exposed services. Payment system provides a payment gateway for all Booking operations.</p>
+
+<p>Interface Diagram</p>
+
+<p>This section provides the overview of the t’wayair Booking API system interaction with OTAs and CRS system. The following diagram shows how the t’wayair Booking API system will integrate or communicate with the various OTAs.</p>
+
+<p>API Service Exposed</p>
+
+<h1 id="services">Services</h1>
+
+<table>
+<tr><th>Name</th><th>Description</th></tr>
+<tr><td><a href="shop-service.html">ShopService</a></td><td>This service is used for flight/ancillary related operations.</td></tr>
+<tr><td><a href="book-service.html">BookService</a></td><td>The Reservations service provides a set of operations that can be performed on a PNR.</td></tr>
+<tr><td><a href="postbook-service.html">PostbookService</a></td><td>This service is used for retrieve <a href="postbook-service.html#method-calendarfare-deprecated">Calendar<a href="complex-types.html#fare">Fare</a></a>, reports, etc.</td></tr>
+<tr><td><a href="checkin-service.html">CheckInService</a></td><td>This service is used for check-in.</td></tr>
+<tr><td><a href="complex-types.html">Simple And <a href="complex-types.html">Complex Types</a></a></td></tr>
+<tr><td><a href="appendix.html#appendix-1-error-codes">Appendix 1 – <a href="appendix.html#appendix-1-error-codes">Error Codes</a></a></td></tr>
+</table>
+
+
+<p>Services Endpoint</p>
+
+<li><strong>Product  :  </strong><strong>https://agencybookingapi.twayair.com/twayair/service</strong><strong>/[ServiceGroup]/[ServiceName</strong><strong>]</strong></li>
+
+<li><strong>S</strong><strong>taging  :  </strong></li>
+
+<p>[<strong>https://dev-cld-otaapi.twayair.com</strong><strong>/twayair/service/[ServiceGroup]/[ServiceName</strong>](https://dev-cld-otaapi.twayair.com/twayair/service/%5bServiceGroup%5d/%5bServiceName)<strong>]</strong></p>
+
+<li>Authentication and Authorization of client using an HTTP basic authentication</li>
+
+<p>The password is based on 256 bit SHA algorithm over SEED encryption to protect secure data.</p>
+
+<p>Access Account</p>
+
+<p>The AgencyCode and Password(encrypted on SHA-256) are provided separately.</p>
+
+<p>TokenID</p>
+
+<p>All RSmsg object has a TokenID attribute.</p>
+<p>TokenID can be used for log tracing if there is a problem with the API.</p>
+
+<div class="sample-section"><div class="xml-block" id="xmlblk1">
+  <div class="xml-toolbar">
+    <span class="xml-label">Response</span>
+    <button class="copy-btn" onclick="copyXml('xmlblk1')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <pre class="xml-pre"><code class="xml-code" data-raw="&lt;AirAvailabilityRSmsg **TokenID=&quot;TKN-dev-TWAYIT-PC-http-nio-80-exec-6-1487228660120-2031960500&quot;**&gt;
+  &lt;AirAvailabilityRS&gt;
+    &lt;OriginDestinationInfo TripDirection=&quot;OW&quot; IsPartOfRoundTrip=&quot;true&quot; SearchIndex=&quot;1&quot; PricingUnitID=&quot;2&quot; Origin=&quot;GMP&quot; Destination=&quot;CJU&quot;&gt;
+      &lt;TripInfo TripIndex=&quot;11&quot; Route=&quot;GMP-CJU&quot;&gt;
+        &lt;SegmentInfo SegmentIndex=&quot;11&quot; Stops=&quot;0&quot; Status=&quot;OPEN&quot; DayChange=&quot;0&quot; JourneyTime=&quot;01:05&quot; IsIropedInd=&quot;false&quot;&gt;
+          &lt;FlightIdentifierInfo CarrierCode=&quot;TW&quot; FlightNumber=&quot;751&quot; FlightDate=&quot;2017-03-18Z&quot; FlightSuffix=&quot;*&quot;/&gt;
+          &lt;DepartureInfo AirportCode=&quot;GMP&quot; DateTime=&quot;2017-03-18T06:20:00Z&quot; TimeZoneOffset=&quot;GMT+09:00&quot;/&gt;
+          &lt;ArrivalInfo AirportCode=&quot;CJU&quot; DateTime=&quot;2017-03-18T07:25:00Z&quot; TimeZoneOffset=&quot;GMT+09:00&quot;/&gt;
+          &lt;AircraftInfo Type=&quot;737&quot; Version=&quot;800&quot;/&gt;
+          &lt;DeiInfo IsExistInd=&quot;true&quot; DisplayInd=&quot;false&quot;/&gt;
+          &lt;SegmentAvailability BookingClass=&quot;B&quot; SeatAvailablity=&quot;0&quot; InventoryStatus=&quot;CC&quot; CabinClass=&quot;ECONOMY&quot;/&gt;
+          &lt;SegmentAvailability BookingClass=&quot;Y&quot; SeatAvailablity=&quot;9&quot; InventoryStatus=&quot;AV&quot; CabinClass=&quot;ECONOMY&quot;/&gt;
+        &lt;/SegmentInfo&gt;
+      &lt;/TripInfo&gt;…"><span class="xb">&lt;</span><span class="xt">AirAvailabilityRSmsg</span> **TokenID<span class="xa">=&quot;</span><span class="xv">TKN-dev-TWAYIT-PC-http-nio-80-exec-6-1487228660120-2031960500</span><span class="xa">&quot;</span>**<span class="xb">&gt;</span>
+  <span class="xb">&lt;</span><span class="xt">AirAvailabilityRS</span><span class="xb">&gt;</span>
+    <span class="xb">&lt;</span><span class="xt">OriginDestinationInfo</span> TripDirection<span class="xa">=&quot;</span><span class="xv">OW</span><span class="xa">&quot;</span> IsPartOfRoundTrip<span class="xa">=&quot;</span><span class="xv">true</span><span class="xa">&quot;</span> SearchIndex<span class="xa">=&quot;</span><span class="xv">1</span><span class="xa">&quot;</span> PricingUnitID<span class="xa">=&quot;</span><span class="xv">2</span><span class="xa">&quot;</span> Origin<span class="xa">=&quot;</span><span class="xv">GMP</span><span class="xa">&quot;</span> Destination<span class="xa">=&quot;</span><span class="xv">CJU</span><span class="xa">&quot;</span><span class="xb">&gt;</span>
+      <span class="xb">&lt;</span><span class="xt">TripInfo</span> TripIndex<span class="xa">=&quot;</span><span class="xv">11</span><span class="xa">&quot;</span> Route<span class="xa">=&quot;</span><span class="xv">GMP-CJU</span><span class="xa">&quot;</span><span class="xb">&gt;</span>
+        <span class="xb">&lt;</span><span class="xt">SegmentInfo</span> SegmentIndex<span class="xa">=&quot;</span><span class="xv">11</span><span class="xa">&quot;</span> Stops<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> Status<span class="xa">=&quot;</span><span class="xv">OPEN</span><span class="xa">&quot;</span> DayChange<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> JourneyTime<span class="xa">=&quot;</span><span class="xv">01:05</span><span class="xa">&quot;</span> IsIropedInd<span class="xa">=&quot;</span><span class="xv">false</span><span class="xa">&quot;</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">FlightIdentifierInfo</span> CarrierCode<span class="xa">=&quot;</span><span class="xv">TW</span><span class="xa">&quot;</span> FlightNumber<span class="xa">=&quot;</span><span class="xv">751</span><span class="xa">&quot;</span> FlightDate<span class="xa">=&quot;</span><span class="xv">2017-03-18Z</span><span class="xa">&quot;</span> FlightSuffix<span class="xa">=&quot;</span><span class="xv">*</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">DepartureInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">GMP</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2017-03-18T06:20:00Z</span><span class="xa">&quot;</span> TimeZoneOffset<span class="xa">=&quot;</span><span class="xv">GMT+09:00</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">ArrivalInfo</span> AirportCode<span class="xa">=&quot;</span><span class="xv">CJU</span><span class="xa">&quot;</span> DateTime<span class="xa">=&quot;</span><span class="xv">2017-03-18T07:25:00Z</span><span class="xa">&quot;</span> TimeZoneOffset<span class="xa">=&quot;</span><span class="xv">GMT+09:00</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">AircraftInfo</span> Type<span class="xa">=&quot;</span><span class="xv">737</span><span class="xa">&quot;</span> Version<span class="xa">=&quot;</span><span class="xv">800</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">DeiInfo</span> IsExistInd<span class="xa">=&quot;</span><span class="xv">true</span><span class="xa">&quot;</span> DisplayInd<span class="xa">=&quot;</span><span class="xv">false</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">SegmentAvailability</span> BookingClass<span class="xa">=&quot;</span><span class="xv">B</span><span class="xa">&quot;</span> SeatAvailablity<span class="xa">=&quot;</span><span class="xv">0</span><span class="xa">&quot;</span> InventoryStatus<span class="xa">=&quot;</span><span class="xv">CC</span><span class="xa">&quot;</span> CabinClass<span class="xa">=&quot;</span><span class="xv">ECONOMY</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">SegmentAvailability</span> BookingClass<span class="xa">=&quot;</span><span class="xv">Y</span><span class="xa">&quot;</span> SeatAvailablity<span class="xa">=&quot;</span><span class="xv">9</span><span class="xa">&quot;</span> InventoryStatus<span class="xa">=&quot;</span><span class="xv">AV</span><span class="xa">&quot;</span> CabinClass<span class="xa">=&quot;</span><span class="xv">ECONOMY</span><span class="xa">&quot;</span><span class="xb">/&gt;</span>
+        <span class="xb">&lt;/</span><span class="xt">SegmentInfo</span><span class="xb">&gt;</span>
+      <span class="xb">&lt;/</span><span class="xt">TripInfo</span><span class="xb">&gt;</span>…</code></pre>
+</div></div>
+
+<p>The Basic Comunication Sample (Classic ASP)</p>
+
+<p>You can refer to the sample code below.</p>
+<p>Authentication information must be sent to the HTTP Header and need encode Base64.</p>
+
+<div class="sample-section"><div class="xml-block" id="xmlblk2">
+  <div class="xml-toolbar">
+    
+    <button class="copy-btn" onclick="copyXml('xmlblk2')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <pre class="xml-pre"><code class="xml-code" data-raw="&lt;% Response.CacheControl=&quot;no-cache&quot; %&gt;
+  &lt;% Response.Expires=-1 %&gt;
+    &lt;!-- #include file=&quot;function.asp&quot; --&gt;
+      &lt;%  Set xmlHTTP = Server.CreateObject(&quot;MSXML2.ServerXMLHTTP&quot;)  Set xmlDoc = Server.CreateObject(&quot;MSXML2.DOMDocument&quot;)  Dim apikey  Dim pass  apikey=&quot;60200040&quot; &#x27;input agencyCode  pass=&quot;&quot;           &#x27;input encrypted Seed Password  xmlHTTP.Open &quot;POST&quot;, &quot; https://dev-cld-otaapi.twayair.com/twayair/service/shop/AirAvailability&quot;, false  **xmlHTTP.setRequestHeader &quot;Content-Type&quot;, &quot;application/xml&quot;**  **xmlHTTP.setRequestHeader &quot;Authorization&quot;, &quot;Basic &quot; ****&amp;**** Base64Encode(apikey ****&amp;**** &quot;:&quot; ****&amp;**** pass)**** **   xmlHTTP.send &quot;&lt;AirAvailabilityRQmsg&gt;
+        &lt;AirAvailabilityRQ&gt;
+          &lt;AirlineCode&gt;TW
+          &lt;/AirlineCode&gt;
+          &lt;AvailabilitySearches&gt;
+            &lt;Origin&gt;ICN
+            &lt;/Origin&gt;
+            &lt;Destination&gt;MFM
+            &lt;/Destination&gt;
+            &lt;TravelDate&gt;2017-02-10
+            &lt;/TravelDate&gt;
+          &lt;/AvailabilitySearches&gt;
+          &lt;AvailabilitySearches&gt;
+            &lt;Origin&gt;MFM
+            &lt;/Origin&gt;
+            &lt;Destination&gt;ICN
+            &lt;/Destination&gt;
+            &lt;TravelDate&gt;2017-02-13
+            &lt;/TravelDate&gt;
+          &lt;/AvailabilitySearches&gt;
+          &lt;PaxCountDetails&gt;
+            &lt;PaxType&gt;ADULT
+            &lt;/PaxType&gt;
+            &lt;PaxCount&gt;1
+            &lt;/PaxCount&gt;
+          &lt;/PaxCountDetails&gt;
+          &lt;FareLevels&gt;AL
+          &lt;/FareLevels&gt;
+          &lt;TripType&gt;RT
+          &lt;/TripType&gt;
+          &lt;AgencyCode&gt;60200040
+          &lt;/AgencyCode&gt;
+        &lt;/AirAvailabilityRQ&gt;
+      &lt;/AirAvailabilityRQmsg&gt;">&lt;% Response.CacheControl<span class="xa">=&quot;</span><span class="xv">no-cache</span><span class="xa">&quot;</span> %<span class="xb">&gt;</span>
+  &lt;% Response.Expires=-1 %<span class="xb">&gt;</span>
+    &lt;!-- #include file<span class="xa">=&quot;</span><span class="xv">function.asp</span><span class="xa">&quot;</span> --<span class="xb">&gt;</span>
+      &lt;%  Set xmlHTTP = Server.CreateObject(&quot;MSXML2.ServerXMLHTTP&quot;)  Set xmlDoc = Server.CreateObject(&quot;MSXML2.DOMDocument&quot;)  Dim apikey  Dim pass  apikey<span class="xa">=&quot;</span><span class="xv">60200040</span><span class="xa">&quot;</span> &#x27;input agencyCode  pass<span class="xa">=&quot;</span><span class="xv"></span><span class="xa">&quot;</span>           &#x27;input encrypted Seed Password  xmlHTTP.Open &quot;POST&quot;, &quot; https://dev-cld-otaapi.twayair.com/twayair/service/shop/AirAvailability&quot;, false  **xmlHTTP.setRequestHeader &quot;Content-Type&quot;, &quot;application/xml&quot;**  **xmlHTTP.setRequestHeader &quot;Authorization&quot;, &quot;Basic &quot; ****&amp;**** Base64Encode(apikey ****&amp;**** &quot;:&quot; ****&amp;**** pass)**** **   xmlHTTP.send &quot;<span class="xb">&lt;</span><span class="xt">AirAvailabilityRQmsg</span><span class="xb">&gt;</span>
+        <span class="xb">&lt;</span><span class="xt">AirAvailabilityRQ</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">AirlineCode</span><span class="xb">&gt;</span>TW
+          <span class="xb">&lt;/</span><span class="xt">AirlineCode</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">AvailabilitySearches</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">Origin</span><span class="xb">&gt;</span>ICN
+            <span class="xb">&lt;/</span><span class="xt">Origin</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">Destination</span><span class="xb">&gt;</span>MFM
+            <span class="xb">&lt;/</span><span class="xt">Destination</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">TravelDate</span><span class="xb">&gt;</span>2017-02-10
+            <span class="xb">&lt;/</span><span class="xt">TravelDate</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;/</span><span class="xt">AvailabilitySearches</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">AvailabilitySearches</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">Origin</span><span class="xb">&gt;</span>MFM
+            <span class="xb">&lt;/</span><span class="xt">Origin</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">Destination</span><span class="xb">&gt;</span>ICN
+            <span class="xb">&lt;/</span><span class="xt">Destination</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">TravelDate</span><span class="xb">&gt;</span>2017-02-13
+            <span class="xb">&lt;/</span><span class="xt">TravelDate</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;/</span><span class="xt">AvailabilitySearches</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">PaxCountDetails</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">PaxType</span><span class="xb">&gt;</span>ADULT
+            <span class="xb">&lt;/</span><span class="xt">PaxType</span><span class="xb">&gt;</span>
+            <span class="xb">&lt;</span><span class="xt">PaxCount</span><span class="xb">&gt;</span>1
+            <span class="xb">&lt;/</span><span class="xt">PaxCount</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;/</span><span class="xt">PaxCountDetails</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">FareLevels</span><span class="xb">&gt;</span>AL
+          <span class="xb">&lt;/</span><span class="xt">FareLevels</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">TripType</span><span class="xb">&gt;</span>RT
+          <span class="xb">&lt;/</span><span class="xt">TripType</span><span class="xb">&gt;</span>
+          <span class="xb">&lt;</span><span class="xt">AgencyCode</span><span class="xb">&gt;</span>60200040
+          <span class="xb">&lt;/</span><span class="xt">AgencyCode</span><span class="xb">&gt;</span>
+        <span class="xb">&lt;/</span><span class="xt">AirAvailabilityRQ</span><span class="xb">&gt;</span>
+      <span class="xb">&lt;/</span><span class="xt">AirAvailabilityRQmsg</span><span class="xb">&gt;</span></code></pre>
+</div>
+<pre><code>&quot;  response.write xmlHTTP.responseText %&gt;</code></pre></div>
+
+<h1 id="process-flow">Process Flow</h1>
+
+<h1 id="overview">Overview</h1>
+
+<p>Travel Agent can refer to this process flow and make their reservation system.</p>
+
+<p>We have three main processes by Booking, Booking management, Other server.</p>
+
+<p>Main Process</p>
+
+<p>Booking Process</p>
+
+<p>Booking Process (with Purchasing Bundle)</p>
+
+<p>Booking Management Process</p>
+
+<p>Booking Management Process (with Payment)</p>
+
+<p>Purchase Ancillary Services for AncillarySaleDelegateAgency</p>
+
+<p>Process for Purchase Ancillary Services for AncillarySaleDelegateAgency.</p>
+
+<p>This process requires that the agency be <strong>approved by T&#x27;way Air to conduct Ancillary Delegate Sales.</strong></p>
+
+<p>Please refer <strong><a href="design-notes.html#about-the-role">to the About The Role</a></strong> page for more information on authorization</p>
+
+<p>If you need this authorization, Please contact the Sales Team.</p>
+
+<p>Booking Management Process (for <a href="design-notes.html#booking-management-process-for-group-pnr-retrieval-agency">Group PNR Retrieval Agency</a>)</p>
+
+<p>Process for Booking Management Process for <a href="design-notes.html#booking-management-process-for-group-pnr-retrieval-agency">Group PNR Retrieval Agency</a></p>
+
+<p>This process requires that the agency be <strong>approved by T&#x27;way Air to conduct </strong><strong>Group PNR retrieval permission</strong><strong>.</strong></p>
+
+<p>Please refer <strong><a href="design-notes.html#about-the-role">to the About The Role</a></strong> page for more information on authorization</p>
+
+<p>If you need this authorization, Please contact the Sales Team.</p>
+
+
+
+
+
+
+<p>Booking Management Process (with Reaccom)</p>
+
+<p>Booking Management Process (with Check-in)</p>
+
+<p>Booking Management Process (with Uncheck-in)</p>
+
+<p>Other Service Process</p>
+
+<p>Transaction per Second : TPS</p>
+
+<p>When a request exceeds TPS, the HttpStatus Code is sent to TOO_MANY_REQUESTS(429). And it&#x27;s being applied to the <a href="shop-service.html#method-airavailability">AirAvailability</a> API. Please contact our sales team regarding TPS.</p>
+
+<h1 id="about-the-role">About The Role</h1>
+
+<p>Agency is assigned specific ROLE, and each ROLE has designated service methods it can access.</p>
+<p>If a ROLE change is required, please contact Sales team.</p>
+
+<table>
+<tr><th><strong>ROLE</strong></th><th><strong>Services</strong></th><th><strong>Method</strong></th></tr>
+<tr><td>NORMAL_BOOK</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-airavailability">AirAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-retrieveroute">RetrieveRoute</a></td></tr>
+<tr><td><a href="shop-service.html#method-throughflightinfo">ThroughFlightInfo</a></td></tr>
+<tr><td><a href="shop-service.html#method-fareruledescription"><a href="complex-types.html#fare">Fare</a>RuleDescription</a></td></tr>
+<tr><td><a href="shop-service.html#method-farequote"><a href="complex-types.html#fare">Fare</a>Quote</a></td></tr>
+<tr><td><a href="shop-service.html#method-freebaggageallowance">FreeBaggageAllowance</a></td></tr>
+<tr><td><a href="shop-service.html#method-retrievessim">RetrieveSsim</a></td></tr>
+<tr><td><a href="shop-service.html#method-retrievepaxtypediscount">RetrievePaxTypeDiscount</a></td></tr>
+<tr><td><a href="book-service.html">BookService</a></td><td><a href="book-service.html#method-retrievebooking">RetrieveBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-splitbooking">SplitBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-createbooking">CreateBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-confirmprice">ConfirmPrice</a></td></tr>
+<tr><td><a href="book-service.html#method-retrieveagencycredit">RetrieveAgencyCredit</a></td></tr>
+<tr><td><a href="book-service.html#method-modifybooking">ModifyBooking</a></td></tr>
+<tr><td>*<a href="book-service.html#method-confirmcancelprice">ConfirmCancelPrice</a>*</td></tr>
+<tr><td><a href="book-service.html#method-cancelbooking">CancelBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-confirmschedulechange">ConfirmScheduleChange</a></td></tr>
+<tr><td><a href="book-service.html#method-traveldocuments">TravelDocuments</a></td></tr>
+<tr><td><a href="book-service.html#method-changecontactpoint">ChangeContactPoint</a></td></tr>
+<tr><td><a href="book-service.html#method-senditinerary">SendItinerary</a></td></tr>
+<tr><td>*<a href="book-service.html#method-changeguestcontactpoint">ChangeGuestContactPoint</a>*</td></tr>
+<tr><td><a href="book-service.html#method-cancelinfant">CancelInfant</a></td></tr>
+<tr><td><a href="book-service.html#method-releaseancillary">ReleaseAncillary</a></td></tr>
+<tr><td><a href="book-service.html#method-confirmcancelinfant">Confirm<a href="book-service.html#method-cancelinfant">CancelInfant</a></a></td></tr>
+<tr><td><a href="book-service.html#method-kakaopayready">KakaopayReady</a></td></tr>
+<tr><td>AIRAVAIL_ONLY</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-airavailability">AirAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-retrieveroute">RetrieveRoute</a></td></tr>
+<tr><td><a href="shop-service.html#method-throughflightinfo">ThroughFlightInfo</a></td></tr>
+<tr><td><a href="shop-service.html#method-retrievessim">RetrieveSsim</a></td></tr>
+<tr><td>ANCILLARY_AVAIL_CHECK</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-ancillaryavailability">AncillaryAvailability</a></td></tr>
+<tr><td>ANCILLARY_SALE_ONLY</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-ancillaryavailability">AncillaryAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-seatavailability">SeatAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-mealavailability">MealAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-baggageavailability">BaggageAvailability</a></td></tr>
+<tr><td><a href="shop-service.html#method-bundleavailability">BundleAvailability</a></td></tr>
+<tr><td><a href="book-service.html">BookService</a></td><td><a href="book-service.html#method-retrievebooking">RetrieveBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-confirmprice">ConfirmPrice</a></td></tr>
+<tr><td><a href="book-service.html#method-modifybooking">ModifyBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-releaseancillary">ReleaseAncillary</a></td></tr>
+<tr><td>*<a href="book-service.html#method-retrievebooking">RetrieveBooking</a>ForAncSale*</td></tr>
+<tr><td><a href="book-service.html#method-generateancillaryauthtoken">GenerateAncillaryAuthToken</a></td></tr>
+<tr><td><a href="book-service.html#method-retrieveancillaryauthtokenstatus">RetrieveAncillaryAuthTokenStatus</a></td></tr>
+<tr><td>ANCILLARY_SEAT</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-seatavailability">SeatAvailability</a></td></tr>
+<tr><td>ANCILLARY_MEAL</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-mealavailability">MealAvailability</a></td></tr>
+<tr><td>ANCILLARY_BAG</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-baggageavailability">BaggageAvailability</a></td></tr>
+<tr><td>ANCILLARY_BUND</td><td><a href="shop-service.html">ShopService</a></td><td><a href="shop-service.html#method-bundleavailability">BundleAvailability</a></td></tr>
+<tr><td>MANAGE_PNR_ONLY</td><td><a href="book-service.html">BookService</a></td><td><a href="book-service.html#method-retrievebooking">RetrieveBooking</a></td></tr>
+<tr><td><a href="book-service.html#method-confirmcancelprice">ConfirmCancelPrice</a></td></tr>
+<tr><td><a href="book-service.html#method-cancelbooking">CancelBooking</a></td></tr>
+<tr><td>CHANGE_BOOK</td><td><a href="book-service.html">BookService</a></td><td><a href="book-service.html#method-enhancedairavailability">Enhanced<a href="shop-service.html#method-airavailability">AirAvailability</a></a></td></tr>
+<tr><td><a href="book-service.html#method-modifybooking">ModifyBooking</a></td></tr>
+<tr><td>REPORT</td><td>Post<a href="book-service.html">BookService</a></td><td><a href="postbook-service.html#method-dailysalesreportsummary">DailySalesReportSummary</a></td></tr>
+<tr><td><a href="postbook-service.html#method-dailyrevenuereportsummary">DailyRevenueReportSummary</a></td></tr>
+<tr><td><a href="postbook-service.html#method-dailysalesreportrealtime">DailySalesReportRealTime</a></td></tr>
+<tr><td>BOARDINGPASS</td><td>Post<a href="book-service.html">BookService</a></td><td><a href="postbook-service.html#method-boardingpassinfo">BoardingPassInfo</a></td></tr>
+<tr><td>CHECKIN</td><td>CheckinService</td><td>CheckinAvailability</td></tr>
+<tr><td><a href="checkin-service.html#method-searchguest">SearchGuest</a></td></tr>
+<tr><td><a href="checkin-service.html#method-checkinguest">CheckinGuest</a></td></tr>
+<tr><td><a href="checkin-service.html#method-uncheckinguest">Un<a href="checkin-service.html#method-checkinguest">CheckinGuest</a></a></td></tr>
+<tr><td><a href="checkin-service.html#method-checkinseatavailability">Checkin<a href="shop-service.html#method-seatavailability">SeatAvailability</a></a></td></tr>
+</table>
+
+
+<p><strong>● </strong><strong><a href="design-notes.html#about-the-role">AncillarySaleDelegate Agency</a></strong></p>
+
+<p>If Agency that only sales as an Ancillary service sales agent, <strong>you have to have the additional service AncillarySaleDelegate</strong>. AncillarySaleDelegateAgency will be assigned the ‘<strong>ANCILLARY_SALE_ONLY</strong>’ ROLE. If you need to add this authorization, Please contact your sales team.</p>
+
+<p><strong>● </strong><strong>Group PNR </strong><strong>Retrieval </strong><strong>Agency</strong></p>
+
+<p>To retrieve Group PNRs or call related APIs<strong>, Group PNR access </strong><strong>authorization </strong><strong>is required.</strong></p>
+<p>If you need to add Group PNR access authorization, Please contact the Sales Team.</p>
+
+<h1 id="services">Services</h1>
+
+<h1 id="shopservice"><a href="shop-service.html">ShopService</a></h1>
+  </div>
+</main>
+<script>
+function copyXml(blockId) {
+  const block = document.getElementById(blockId);
+  const code = block.querySelector('.xml-code');
+  const raw = code.dataset.raw || code.textContent;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = block.querySelector('.copy-btn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 18 4 13"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = raw; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    const btn = block.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2v1"/></svg> Copy'; }, 2000);
+  });
+}
+</script>
+<script>
+const page=location.pathname.split('/').pop().replace('.html','')||'overview';
+document.querySelectorAll('.nav-link').forEach(a=>{if(a.dataset.page===page)a.classList.add('active');});
+</script>
+</body>
+</html>
